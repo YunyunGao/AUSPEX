@@ -1,4 +1,4 @@
-# Auspex
+# AUSPEX
 
 ## Getting Started
 
@@ -6,9 +6,11 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-It is required to install [Anaconda environment](https://docs.anaconda.com/anaconda/install/).
+The easiest approach to install AUSPEX is through conda environment.
 
-Once anaconda is installed, create a new virtual environment using the provided environment.yml
+Either install [Anaconda](https://docs.anaconda.com/anaconda/install/) or [miniconda](https://docs.conda.io/projects/miniconda/en/latest/)
+
+Once installed, create a new virtual environment using the provided environment.yml
 
 ```
 conda env create -f environment.yml
@@ -27,7 +29,7 @@ Install Auspex through **pip install** from its Git repository.
 
 
 ```
-pip install git+https://github.com/thorn-lab/auspex_python.git
+pip install git+https://github.com/thorn-lab/AUSPEX.git
 ```
 
 ### Usage
