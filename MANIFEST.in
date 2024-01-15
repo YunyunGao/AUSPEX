@@ -1,0 +1,7 @@
+include auspex/lib/int_lis.so
+include auspex/Helcaraxe_models/*
+graft auspex/Helcaraxe_models/final_models/Helcaraxe_Fobs_model
+graft auspex/Helcaraxe_models/final_models/Helcaraxe_Fobs_model/variables
+graft auspex/Helcaraxe_models/final_models/Helcaraxe_Iobs_model
+graft auspex/Helcaraxe_models/final_models/Helcaraxe_Iobs_model/variables
+

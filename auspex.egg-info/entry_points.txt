@@ -1,0 +1,2 @@
+[console_scripts]
+auspex = auspex.__init__:run
