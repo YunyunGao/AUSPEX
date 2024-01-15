@@ -1,0 +1,10 @@
+.idea
+__pycache__
+*.sh
+init.py
+venv
+test.py
+*.pyc
+*.png
+*.tar.gz
+mtz_with_ice_rings.txt
