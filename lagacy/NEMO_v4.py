@@ -119,11 +119,11 @@ class NemoHandler(object):
         # generate feature_array. weak obs will be labeled as 1, others 0.
         #feature_array = np.zeros(self._reso_low.size, dtype=int)
         #feature_array[np.isin(self._sorted_arg[:self._reso_select], ind_weak)] = np.arange(1, len(ind_weak) + 1)
-        # cluster_ind_by_size = []
-        # plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
-        # plt.scatter(i, j, c='r', s=3, alpha=0.5)
-        # plt.savefig('/home/yui-local/test_img/{0}.png'.format("weak"))
-        # plt.clf()
+        cluster_ind_by_size = []
+        plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
+        plt.scatter(i, j, c='r', s=3, alpha=0.5)
+        plt.savefig('/home/yui-local/test_img/{0}.png'.format("weak"))
+        plt.clf()
 
         for num_points in range(ind_weak.size, 1, -1):
             print(num_points)
@@ -163,10 +163,10 @@ class NemoHandler(object):
                     #in_token = np.append(in_token, ind_sub_cluster[wilson_filter])
                     #print(np.any(wilson_filter))
                     if wilson_filter.sum() / wilson_filter.size > 0.5:
-                        # plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
-                        # plt.scatter(auspex_array[args_, 0], auspex_array[args_, 1], s=3, alpha=0.5)
-                        # plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(num_points, c_label))
-                        # plt.clf()
+                        plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
+                        plt.scatter(auspex_array[args_, 0], auspex_array[args_, 1], s=3, alpha=0.5)
+                        plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(num_points, c_label))
+                        plt.clf()
                         in_token = np.append(in_token, ind_sub_cluster)
                         in_prob = np.append(in_prob, cluster_prob[args_])
                 #args_ = np.argwhere(cluster_prob >= 0.8).flatten()
@@ -193,30 +193,30 @@ class NemoHandler(object):
             final_weak_ind = cluster_ind_recur[cluster_counts_recur > 1]
         elif np.all(cluster_counts_recur == cluster_counts_recur[0]):
             # when the elements in the clusters are repetitive coherently. pass
-            # print(3)
+            print(3)
             final_weak_ind = cluster_ind_recur
         else:
             # when the elements in the clusters are varying. only those with 0.5 occurrence rate will pass
-            # print(4)
+            print(4)
             repetitive_ind = cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak.size)) * 0.8
             ind_weak_and_cluster = np.isin(cluster_ind_recur, ind_weak[weak_prob <= 0.005])
             final_weak_ind = cluster_ind_recur[ind_weak_and_cluster | repetitive_ind]
             #final_weak_ind = cluster_ind_recur[repetitive_ind]
 
-        #     plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
-        #     plt.scatter(1. / self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] ** 2,
-        #                 self._work_obs.data().as_numpy_array()[cluster_ind_recur]/self._work_obs.sigmas().as_numpy_array()[cluster_ind_recur]
-        #                 , s=3,
-        #                 alpha=0.5)  # cluster_ind_recur[repetitive_ind]
-        #     plt.savefig('/home/yui-local/test_img/{0}.png'.format('cluster'))
-        #     plt.clf()
-        #
-        # plt.scatter(auspex_array[:, 0], auspex_array[:,1],s=3,alpha=0.5)
-        # plt.scatter(1. / self._work_obs.d_spacings().data().as_numpy_array()[final_weak_ind]**2,
-        #             self._work_obs.data().as_numpy_array()[final_weak_ind]/self._work_obs.sigmas().as_numpy_array()[final_weak_ind]
-        #             ,s=3,alpha=0.5) #cluster_ind_recur[repetitive_ind]
-        # plt.savefig('/home/yui-local/test_img/{0}.png'.format('final'))
-        # plt.clf()
+            plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
+            plt.scatter(1. / self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] ** 2,
+                        self._work_obs.data().as_numpy_array()[cluster_ind_recur]/self._work_obs.sigmas().as_numpy_array()[cluster_ind_recur]
+                        , s=3,
+                        alpha=0.5)  # cluster_ind_recur[repetitive_ind]
+            plt.savefig('/home/yui-local/test_img/{0}.png'.format('cluster'))
+            plt.clf()
+
+        plt.scatter(auspex_array[:, 0], auspex_array[:,1],s=3,alpha=0.5)
+        plt.scatter(1. / self._work_obs.d_spacings().data().as_numpy_array()[final_weak_ind]**2,
+                    self._work_obs.data().as_numpy_array()[final_weak_ind]/self._work_obs.sigmas().as_numpy_array()[final_weak_ind]
+                    ,s=3,alpha=0.5) #cluster_ind_recur[repetitive_ind]
+        plt.savefig('/home/yui-local/test_img/{0}.png'.format('final'))
+        plt.clf()
 
         return self._work_obs.indices().as_vec3_double().as_numpy_array()[final_weak_ind]
 
