@@ -111,7 +111,7 @@ class NemoHandler(object):
             conserv_ind_weak = ind_weak[ind_weak <= 0.005]
             return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
 
-        ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= 0.02]
+        ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= 0.025]
         j = np.concatenate((ac_weak/sig_ac_weak, c_weak/sig_c_weak))
         #j = np.concatenate((ac_weak, c_weak))
         i = np.concatenate((d_ac_weak, d_c_weak))
@@ -125,7 +125,7 @@ class NemoHandler(object):
         #feature_array[np.isin(self._sorted_arg[:self._reso_select], ind_weak_work)] = np.arange(1, len(ind_weak_work) + 1)
         ind_cluster_by_size = []
         plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
-        plt.scatter(i, j, c='r', s=3, alpha=0.5)
+        plt.scatter(i[weak_prob <= 0.01], j[weak_prob <= 0.01], c='r', s=3, alpha=0.5)
         plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "weak"))
         plt.clf()
 
@@ -154,9 +154,9 @@ class NemoHandler(object):
                 #i_work = copy.deepcopy(i)
                 in_token = np.empty(0, dtype=int)
                 in_prob = np.empty(0, dtype=float)
-                print(unique_cluster_label)
+                #print(unique_cluster_label)
                 for c_label in unique_cluster_label:
-                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.6)).flatten()
+                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.5)).flatten()
                     if args_.size == 0:
                         continue
                     ind_sub_cluster = self._sorted_arg[:self._reso_select][args_]
@@ -168,7 +168,7 @@ class NemoHandler(object):
                     # plt.scatter(auspex_array[args_, 0], auspex_array[args_, 1], s=3, alpha=0.5)
                     # plt.savefig('/home/yui-local/test_img/{0}_{1}_{2}.png'.format(self._refl_data.file_name[-8:-4], num_points, c_label))
                     # plt.clf()
-                    if (wilson_filter.sum() / wilson_filter.size) > 0.6:
+                    if (wilson_filter.sum() / wilson_filter.size) > 0.5:
                         in_token = np.append(in_token, ind_sub_cluster)
                         in_prob = np.append(in_prob, cluster_prob[args_])
                 #args_ = np.argwhere(cluster_prob >= 0.8).flatten()
@@ -182,12 +182,12 @@ class NemoHandler(object):
 
         if not ind_cluster_by_size:
             # when no cluster can be found we need to be very conservative thus level 0.02->0.005
-            conserv_ind_weak_work = ind_weak_work[weak_prob <= 0.005]
-            return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak_work].astype(int)
+            conserv_ind_weak = ind_weak[weak_prob <= 0.005]
+            return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
 
         cluster_ind_recur, cluster_counts_recur = np.unique(np.concatenate(ind_cluster_by_size), return_counts=True)
         cluster_prob = cluster_counts_recur / len(ind_cluster_by_size)
-        print(ind_cluster_by_size)
+        #print(ind_cluster_by_size)
         # print(cluster_counts_recur)
         if cluster_ind_recur.size == 0 or cluster_ind_recur.size == 1:
             # when the intersection of the cluster and wilson outliers has only one element,
@@ -205,7 +205,7 @@ class NemoHandler(object):
             # when the cluster consists more than 2 elements and occurs only once,
             # set level slightly higher than 0.01
             # print(3)
-            ind_weak_and_cluster = np.isin(cluster_ind_recur, ind_weak_work[weak_prob <= 0.011])
+            ind_weak_and_cluster = np.isin(cluster_ind_recur, ind_weak[weak_prob <= 0.011])
             final_weak_ind = cluster_ind_recur[ind_weak_and_cluster]
         elif np.all(cluster_counts_recur == cluster_counts_recur[0]) and not np.all(cluster_counts_recur == 1):
             # when the elements in the clusters are repetitive coherently. pass
@@ -236,8 +236,8 @@ class NemoHandler(object):
         plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "final"))
         plt.clf()
 
-        #return self._work_obs.indices().as_vec3_double().as_numpy_array()[final_weak_ind].astype(int)
-        return final_weak_ind
+        return self._work_obs.indices().as_vec3_double().as_numpy_array()[final_weak_ind].astype(int)
+        #return final_weak_ind
 
 
 def cumprob_c_amplitude(e):
