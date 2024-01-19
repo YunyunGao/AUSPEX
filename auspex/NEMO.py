@@ -55,7 +55,7 @@ class NemoHandler(object):
         self._reso_low = d_spacings[self._sorted_arg][:self._reso_select]
         self._obs_low = self._work_obs.data().as_numpy_array()[self._sorted_arg][:self._reso_select]
         self._sig_low = self._work_obs.sigmas().as_numpy_array()[self._sorted_arg][:self._reso_select]
-        normalizer = absolute_scaling.kernel_normalisation(self._work_obs, auto_kernel=True)
+        normalizer = absolute_scaling.kernel_normalisation(self._work_obs, auto_kernel=1e6)
         if self._work_obs.is_xray_amplitude_array():
             self._work_norma_obs = self._work_obs.customized_copy(
                 data=flex.sqrt(normalizer.normalised_miller.data() / normalizer.normalised_miller.epsilons().data().as_double())
@@ -112,14 +112,14 @@ class NemoHandler(object):
             return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
 
         ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= 0.025]
-        j = np.concatenate((ac_weak/sig_ac_weak, c_weak/sig_c_weak))
-        #j = np.concatenate((ac_weak, c_weak))
+        #j = np.concatenate((ac_weak/sig_ac_weak, c_weak/sig_c_weak))
+        j = np.concatenate((ac_weak, c_weak))
         i = np.concatenate((d_ac_weak, d_c_weak))
         #sorted_args_weak = np.argsort(i)
         #pos_weak = np.vstack((i, j)).transpose()
         #p2_dist = norm(pos_weak[:, None] - pos_weak[None, :], axis=2)
-        auspex_array = np.vstack((1./(self._reso_low**2), self._obs_low/self._sig_low)).transpose()
-        #auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low)).transpose()
+        #auspex_array = np.vstack((1./(self._reso_low**2), self._obs_low/self._sig_low)).transpose()
+        auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low)).transpose()
         # generate feature_array. weak obs will be labeled as 1, others 0.
         #feature_array = np.zeros(self._reso_low.size, dtype=int)
         #feature_array[np.isin(self._sorted_arg[:self._reso_select], ind_weak_work)] = np.arange(1, len(ind_weak_work) + 1)
@@ -132,10 +132,10 @@ class NemoHandler(object):
         for num_points in range(ind_weak_work.size, 1, -1):
             #print(num_points)
             #detect = DBSCAN(eps=dist, min_samples=num_points)
-            detect = HDBSCAN(min_cluster_size=num_points,
+            detect = HDBSCAN(min_cluster_size=num_points)
                              #min_samples=ind_weak_work.size-num_points+1,
                              #max_cluster_size=ind_weak_work.size,
-                             algorithm='brute')
+                             #algorithm='brute')
             try:
                 auspex_array_for_fit = copy.deepcopy(auspex_array)
                 auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1],80) / auspex_array_for_fit[:, 0].max() * auspex_array [:, 0]
@@ -223,21 +223,21 @@ class NemoHandler(object):
 
             plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
             plt.scatter(1. / self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] ** 2,
-                        self._work_obs.data().as_numpy_array()[cluster_ind_recur]/self._work_obs.sigmas().as_numpy_array()[cluster_ind_recur]
-                        , s=3,
+                        self._work_obs.data().as_numpy_array()[cluster_ind_recur]#/self._work_obs.sigmas().as_numpy_array()[cluster_ind_recur]
+                        , s=3, c='b',
                         alpha=0.5)  # cluster_ind_recur[repetitive_ind]
             plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "cluster"))
             plt.clf()
 
         plt.scatter(auspex_array[:, 0], auspex_array[:,1],s=3,alpha=0.5)
         plt.scatter(1. / self._work_obs.d_spacings().data().as_numpy_array()[final_weak_ind]**2,
-                    self._work_obs.data().as_numpy_array()[final_weak_ind]/self._work_obs.sigmas().as_numpy_array()[final_weak_ind]
+                    self._work_obs.data().as_numpy_array()[final_weak_ind]#/self._work_obs.sigmas().as_numpy_array()[final_weak_ind]
                     ,s=3,alpha=0.5) #cluster_ind_recur[repetitive_ind]
         plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "final"))
         plt.clf()
 
-        return self._work_obs.indices().as_vec3_double().as_numpy_array()[final_weak_ind].astype(int)
-        #return final_weak_ind
+        #return self._work_obs.indices().as_vec3_double().as_numpy_array()[final_weak_ind].astype(int)
+        return final_weak_ind
 
 
 def cumprob_c_amplitude(e):
