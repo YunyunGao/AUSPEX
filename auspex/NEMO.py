@@ -94,6 +94,16 @@ class NemoHandler(object):
             raise Exception("Unknown observation type: {}".format(self._work_norma_obs.observation_type()))
         return ac_outlier_flag, c_outlier_flag
 
+    def mmtbx_beamstop_outlier(self):
+        assert self._work_norma_obs.is_xray_amplitude_array()
+        # the default level for beamstop outliers in mmtbx.scaling::outlier_rejection is set to 0.01
+        ac_outlier_flag, c_outlier_flag = self.outliers_by_wilson(0.01)
+        ind_weak = np.concatenate((self._acentric_ind_low[ac_outlier_flag], self._centric_ind_low[c_outlier_flag]))
+        ind_false_sigma = np.argwhere(self._refl_data.sigF <= 0.).flatten()
+        in_add = np.sum((ind_weak[:, None] - ind_false_sigma[None, :]) >= 0, axis=1)
+        recovered_ind = ind_weak + in_add
+        return np.sort(recovered_ind)
+
     def cluster_detect(self):
         ac_outlier_flag, c_outlier_flag = self.outliers_by_wilson(0.05)
         ac_weak = self._obs_low[self._acentric_flag][ac_outlier_flag]
@@ -216,14 +226,18 @@ class NemoHandler(object):
             final_weak_ind = cluster_ind_recur
         else:
             # when the elements in the clusters are varying. only those with 0.8 occurrence rate will pass
-            repetitive_ind_25 = (cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.2) & \
-                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 25.)
+            repetitive_ind_30 = (cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.2) & \
+                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 30.)
+            repetitive_ind_20 = (cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.5) & \
+                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 20.) & \
+                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] < 30.)
             repetitive_ind_10 = (cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.8) & \
                                 (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 10.) & \
-                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] < 25.)
+                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] < 20.)
             ind_weak_and_cluster = np.unique(
                 np.concatenate((ind_weak[(weak_prob <= 1e-3)],
-                                cluster_ind_recur[repetitive_ind_25],
+                                cluster_ind_recur[repetitive_ind_30],
+                                cluster_ind_recur[repetitive_ind_20],
                                 cluster_ind_recur[repetitive_ind_10]))
             )
             #ind_weak_and_cluster = np.isin(cluster_ind_recur, ind_weak[weak_prob <= 0.005])
@@ -260,8 +274,8 @@ class NemoHandler(object):
             ind_false_sigma = np.argwhere(self._refl_data.sigI <= 0.).flatten()
         # indices recoverd by calculating how many indices in ind_false_sigma are smaller than any given index in final_weak_ind
         in_add = np.sum((self._final_weak_ind[:, None] - ind_false_sigma[None, :]) >= 0, axis=1)
-        recoverd_ind = self._final_weak_ind + in_add
-        return recoverd_ind
+        recovered_ind = self._final_weak_ind + in_add
+        return recovered_ind
 
 
 def cumprob_c_amplitude(e):
