@@ -108,10 +108,12 @@ class NemoHandler(object):
 
         if ind_weak.size == 1:
             # if only one outlier by wilson then we become conservative. level 0.02 -> 0.005
-            conserv_ind_weak = ind_weak[ind_weak <= 0.005]
-            return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
+            conserv_ind_weak = ind_weak[ind_weak <= 1e-3]
+            self._final_weak_ind = conserv_ind_weak
+            # return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
+            return conserv_ind_weak
 
-        ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= 0.05]
+        ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= 0.025]
         j = np.concatenate((ac_weak/sig_ac_weak, c_weak/sig_c_weak))
         #j = np.concatenate((ac_weak, c_weak))
         i = np.concatenate((d_ac_weak, d_c_weak))
@@ -125,7 +127,7 @@ class NemoHandler(object):
         #feature_array[np.isin(self._sorted_arg[:self._reso_select], ind_weak_work)] = np.arange(1, len(ind_weak_work) + 1)
         ind_cluster_by_size = []
         plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
-        plt.scatter(i[weak_prob <= 0.05], j[weak_prob <= 0.05], c='r', s=3, alpha=0.5)
+        plt.scatter(i[weak_prob <= 0.025], j[weak_prob <= 0.025], c='r', s=3, alpha=0.5)
         plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "weak"))
         plt.clf()
 
@@ -182,8 +184,10 @@ class NemoHandler(object):
 
         if not ind_cluster_by_size:
             # when no cluster can be found we need to be very conservative thus level 0.02->0.005
-            conserv_ind_weak = ind_weak[weak_prob <= 0.005]
-            return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
+            conserv_ind_weak = ind_weak[weak_prob <= 1e-3]
+            self._final_weak_ind = conserv_ind_weak
+            #return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
+            return conserv_ind_weak
 
         cluster_ind_recur, cluster_counts_recur = np.unique(np.concatenate(ind_cluster_by_size), return_counts=True)
         cluster_prob = cluster_counts_recur / len(ind_cluster_by_size)
@@ -192,11 +196,11 @@ class NemoHandler(object):
         if cluster_ind_recur.size == 0 or cluster_ind_recur.size == 1:
             # when the intersection of the cluster and wilson outliers has only one element,
             # we need to be very conservative thus level 0.02->0.005
-            final_weak_ind = ind_weak[weak_prob <= 0.005]
+            final_weak_ind = ind_weak[weak_prob <= 1e-3]
         elif cluster_counts_recur.size == 2 and np.all(cluster_counts_recur == 1):
             # when the cluster only consists 2 elements and occurs only once,
             # we tend to be more careful thus level 0.02->0.005
-            final_weak_ind = ind_weak[weak_prob <= 0.005]
+            final_weak_ind = ind_weak[weak_prob <= 1e-3]
         elif cluster_counts_recur.size == 2 and not np.all(cluster_counts_recur == 1):
             # when the cluster only consists 2 elements but occurs more than once,
             # we just kick out those occurring only once
@@ -213,11 +217,12 @@ class NemoHandler(object):
         else:
             # when the elements in the clusters are varying. only those with 0.8 occurrence rate will pass
             repetitive_ind_25 = (cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.2) & \
-                             (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 25.)
+                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 25.)
             repetitive_ind_10 = (cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.8) & \
-                             (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 25.)
+                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 10.) & \
+                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] < 25.)
             ind_weak_and_cluster = np.unique(
-                np.concatenate((#ind_weak[(weak_prob <= 0.02) & (i <= 0.002)],
+                np.concatenate((ind_weak[(weak_prob <= 1e-3)],
                                 cluster_ind_recur[repetitive_ind_25],
                                 cluster_ind_recur[repetitive_ind_10]))
             )
