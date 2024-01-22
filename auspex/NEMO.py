@@ -55,7 +55,7 @@ class NemoHandler(object):
         self._reso_low = d_spacings[self._sorted_arg][:self._reso_select]
         self._obs_low = self._work_obs.data().as_numpy_array()[self._sorted_arg][:self._reso_select]
         self._sig_low = self._work_obs.sigmas().as_numpy_array()[self._sorted_arg][:self._reso_select]
-        normalizer = absolute_scaling.kernel_normalisation(self._work_obs, auto_kernel=1e6)
+        normalizer = absolute_scaling.kernel_normalisation(self._work_obs, auto_kernel=True)
         if self._work_obs.is_xray_amplitude_array():
             self._work_norma_obs = self._work_obs.customized_copy(
                 data=flex.sqrt(normalizer.normalised_miller.data() / normalizer.normalised_miller.epsilons().data().as_double())
@@ -111,21 +111,21 @@ class NemoHandler(object):
             conserv_ind_weak = ind_weak[ind_weak <= 0.005]
             return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
 
-        ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= 0.025]
-        #j = np.concatenate((ac_weak/sig_ac_weak, c_weak/sig_c_weak))
-        j = np.concatenate((ac_weak, c_weak))
+        ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= 0.05]
+        j = np.concatenate((ac_weak/sig_ac_weak, c_weak/sig_c_weak))
+        #j = np.concatenate((ac_weak, c_weak))
         i = np.concatenate((d_ac_weak, d_c_weak))
         #sorted_args_weak = np.argsort(i)
         #pos_weak = np.vstack((i, j)).transpose()
         #p2_dist = norm(pos_weak[:, None] - pos_weak[None, :], axis=2)
-        #auspex_array = np.vstack((1./(self._reso_low**2), self._obs_low/self._sig_low)).transpose()
-        auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low)).transpose()
+        auspex_array = np.vstack((1./(self._reso_low**2), self._obs_low/self._sig_low)).transpose()
+        #auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low)).transpose()
         # generate feature_array. weak obs will be labeled as 1, others 0.
         #feature_array = np.zeros(self._reso_low.size, dtype=int)
         #feature_array[np.isin(self._sorted_arg[:self._reso_select], ind_weak_work)] = np.arange(1, len(ind_weak_work) + 1)
         ind_cluster_by_size = []
         plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
-        plt.scatter(i[weak_prob <= 0.01], j[weak_prob <= 0.01], c='r', s=3, alpha=0.5)
+        plt.scatter(i[weak_prob <= 0.05], j[weak_prob <= 0.05], c='r', s=3, alpha=0.5)
         plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "weak"))
         plt.clf()
 
@@ -212,9 +212,14 @@ class NemoHandler(object):
             final_weak_ind = cluster_ind_recur
         else:
             # when the elements in the clusters are varying. only those with 0.8 occurrence rate will pass
-            repetitive_ind = cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.8
+            repetitive_ind_25 = (cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.2) & \
+                             (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 25.)
+            repetitive_ind_10 = (cluster_counts_recur >= np.min((cluster_counts_recur.max(), ind_weak_work.size)) * 0.8) & \
+                             (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 25.)
             ind_weak_and_cluster = np.unique(
-                np.concatenate((ind_weak[(weak_prob <= 0.02) & (i <= 0.002)], cluster_ind_recur[repetitive_ind]))
+                np.concatenate((#ind_weak[(weak_prob <= 0.02) & (i <= 0.002)],
+                                cluster_ind_recur[repetitive_ind_25],
+                                cluster_ind_recur[repetitive_ind_10]))
             )
             #ind_weak_and_cluster = np.isin(cluster_ind_recur, ind_weak[weak_prob <= 0.005])
             #final_weak_ind = cluster_ind_recur[ind_weak_and_cluster | repetitive_ind]
@@ -223,21 +228,35 @@ class NemoHandler(object):
 
             plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
             plt.scatter(1. / self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] ** 2,
-                        self._work_obs.data().as_numpy_array()[cluster_ind_recur]#/self._work_obs.sigmas().as_numpy_array()[cluster_ind_recur]
+                        self._work_obs.data().as_numpy_array()[cluster_ind_recur]/self._work_obs.sigmas().as_numpy_array()[cluster_ind_recur]
                         , s=3, c='b',
                         alpha=0.5)  # cluster_ind_recur[repetitive_ind]
             plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "cluster"))
             plt.clf()
 
-        plt.scatter(auspex_array[:, 0], auspex_array[:,1],s=3,alpha=0.5)
+        plt.scatter(auspex_array[:, 0], auspex_array[:, 1],s=3,alpha=0.5)
         plt.scatter(1. / self._work_obs.d_spacings().data().as_numpy_array()[final_weak_ind]**2,
-                    self._work_obs.data().as_numpy_array()[final_weak_ind]#/self._work_obs.sigmas().as_numpy_array()[final_weak_ind]
+                    self._work_obs.data().as_numpy_array()[final_weak_ind]/self._work_obs.sigmas().as_numpy_array()[final_weak_ind]
                     ,s=3,alpha=0.5) #cluster_ind_recur[repetitive_ind]
         plt.savefig('/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "final"))
         plt.clf()
 
         #return self._work_obs.indices().as_vec3_double().as_numpy_array()[final_weak_ind].astype(int)
+        self._final_weak_ind = final_weak_ind
         return final_weak_ind
+
+    def add_false_sigma_record_back(self):
+        # miller array automatically remove invalid observations with 0 or negative sigma.
+        # for any operation on the original record, the row number of the original records is needed
+        # following code calculate the row number before removing invalid observations
+        if self._work_obs.is_xray_amplitude_array():
+            ind_false_sigma = np.argwhere(self._refl_data.sigF <= 0.).flatten()
+        if self._work_obs.is_xray_intensity_array():
+            ind_false_sigma = np.argwhere(self._refl_data.sigI <= 0.).flatten()
+        # indices recoverd by calculating how many indices in ind_false_sigma are smaller than any given index in final_weak_ind
+        in_add = np.sum((self._final_weak_ind[:, None] - ind_false_sigma[None, :]) >= 0, axis=1)
+        recoverd_ind = self._final_weak_ind + in_add
+        return recoverd_ind
 
 
 def cumprob_c_amplitude(e):
