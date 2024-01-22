@@ -180,7 +180,7 @@ class NemoHandler(object):
                     # plt.scatter(auspex_array[args_, 0], auspex_array[args_, 1], s=3, alpha=0.5)
                     # plt.savefig('/home/yui-local/test_img/{0}_{1}_{2}.png'.format(self._refl_data.file_name[-8:-4], num_points, c_label))
                     # plt.clf()
-                    if (wilson_filter.sum() / wilson_filter.size) > 0.5:
+                    if (wilson_filter.sum() / wilson_filter.size) > 0.3:
                         in_token = np.append(in_token, ind_sub_cluster)
                         in_prob = np.append(in_prob, cluster_prob[args_])
                 #args_ = np.argwhere(cluster_prob >= 0.8).flatten()
