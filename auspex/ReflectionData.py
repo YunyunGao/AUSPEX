@@ -265,7 +265,7 @@ class ReflectionParser(object):
         :return: standard deviation of intensity
         :rtype: 1d ndarray
         """
-        return self._sigF
+        return self._sigI
 
     @property
     def background(self):
@@ -2098,7 +2098,8 @@ def _get_binned_by_multiplicity(quantity_array, sorted_args_by_ires, total_bin_n
 def _binning_idx_even(array_size, num_of_bins):
     max_per_bin = array_size // num_of_bins
     min_per_bin = array_size // (num_of_bins+1)
-    step_redund_per_bin = np.floor(min_per_bin + (max_per_bin - min_per_bin) * np.random.rand(num_of_bins))
+    rng = np.random.default_rng(12345)
+    step_redund_per_bin = np.floor(min_per_bin + (max_per_bin - min_per_bin) * rng.random(num_of_bins))
     compensation_per_bin = (array_size - step_redund_per_bin.sum()) // num_of_bins
     step_redund_per_bin += compensation_per_bin
     upper_ind_list = np.cumsum(step_redund_per_bin)
@@ -2111,7 +2112,8 @@ def _binning_idx_even(array_size, num_of_bins):
 def _binning_idx_xprep(array_size, num_of_bins=21):
     max_per_bin = array_size // (num_of_bins-1)
     min_per_bin = array_size // num_of_bins
-    step_redund_per_bin = np.floor(min_per_bin + (max_per_bin - min_per_bin) * np.random.rand(num_of_bins - 1))
+    rng = np.random.default_rng(12345)
+    step_redund_per_bin = np.floor(min_per_bin + (max_per_bin - min_per_bin) * rng.random(num_of_bins - 1))
     compensation_per_bin = (array_size - step_redund_per_bin.sum()) // (num_of_bins - 1)
     step_redund_per_bin += compensation_per_bin
     upper_ind_list = np.cumsum(step_redund_per_bin)
