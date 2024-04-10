@@ -3,6 +3,7 @@ __pycache__
 *.sh
 init.py
 venv
+lagacy
 test.py
 *.pyc
 *.png

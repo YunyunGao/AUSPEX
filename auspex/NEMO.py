@@ -14,7 +14,7 @@ from sklearn.cluster import HDBSCAN, DBSCAN
 from cctbx.array_family import flex
 from mmtbx.scaling import absolute_scaling, outlier_rejection
 
-from ReflectionData import FileReader
+from ReflectionData import FileReader, IntegrateHKLPlain
 
 import matplotlib.pyplot as plt
 
@@ -30,9 +30,11 @@ reflection_data = FileReader('/media/yui-local/Scratch/works/mtz_with_raw_img/mt
 
 class NemoHandler(object):
     def __init__(self, reso_min=10.):
-        """
+        """Constructor class for automatic NEMO detection. Default hyperparameters t,l,m1,m2,m3 are trained on the
+        reflection data.
 
-        @param reso_min: Minimum resolution.
+        :param reso_min: minimum resolution to check.
+        :type reso_min: float.
         """
         super(NemoHandler, self).__init__()
         self._reso_low = None
@@ -45,12 +47,15 @@ class NemoHandler(object):
         self._acentric_flag = None
         self._prob_c = None
         self._ind_final_outlier = None
+        self._original_row_ind = None
         self._detect_option = ['obs_over_sig', 'obs']
-        self._t = 0.0193  # hyperparamter t: french_wilson_level, trained 0.0193
-        self._l = 0.640  # hyperparameter l: intersection fraction, trained 0.640
-        self._m1 = 0.2  # recurrence rate below 30 Angstrom, trained not important
-        self._m2 = 0.5  # recurrence rate between 30-20 Angstrom, trained not important
-        self._m3 = 0.887  # recurrence rate between 20-10 Angstrom, trained 0.887
+        self._t = 0.0248  # hyperparamter t: french_wilson_level, trained 0.0248
+        self._t_i = 0.0565  # hyperparamter t for intensity: trained 0.0565
+        self._l = 0.296  # hyperparameter l: intersection fraction, trained 0.296
+        self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, trained 0.598
+        self._m1 = 0.100  # recurrence rate below 30 Angstrom, neither important for F nor I
+        self._m2 = 0.598  # recurrence rate between 30-20 Angstrom, trained 0.598. not important for F, important for I
+        self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, trained 0.787. neither important for F nor I
 
     def refl_data_prepare(self, reflection_data, observation_label='FP'):
         self._refl_data = reflection_data
@@ -120,8 +125,8 @@ class NemoHandler(object):
         ac_outlier_flag, c_outlier_flag = self.outliers_by_wilson(0.5)
         ac_weak = self._obs_low[self._acentric_flag][ac_outlier_flag]
         c_weak = self._obs_low[self._centric_flag][c_outlier_flag]
-        d_ac_weak = 1/self._reso_low[self._acentric_flag][ac_outlier_flag]**2
-        d_c_weak = 1/self._reso_low[self._centric_flag][c_outlier_flag]**2
+        d_ac_weak = 1./self._reso_low[self._acentric_flag][ac_outlier_flag]**2
+        d_c_weak = 1./self._reso_low[self._centric_flag][c_outlier_flag]**2
         sig_ac_weak = self._sig_low[self._acentric_flag][ac_outlier_flag]
         sig_c_weak = self._sig_low[self._centric_flag][c_outlier_flag]
 
@@ -134,15 +139,24 @@ class NemoHandler(object):
             self._final_weak_ind = conserv_ind_weak
             # return self._work_obs.indices().as_vec3_double().as_numpy_array()[conserv_ind_weak].astype(int)
             return conserv_ind_weak
-
-        ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t]
+        i = np.concatenate((d_ac_weak, d_c_weak))
         if y_option_ == 'obs_over_sig':
             j = np.concatenate((ac_weak/sig_ac_weak, c_weak/sig_c_weak))
             auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low / self._sig_low)).transpose()
         if y_option_ == 'obs':
             j = np.concatenate((ac_weak, c_weak))
             auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low)).transpose()
-        i = np.concatenate((d_ac_weak, d_c_weak))
+
+        if self._work_obs.is_xray_amplitude_array():
+            ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t]
+            # plot(auspex_array[:, 0], auspex_array[:, 1], i[weak_prob <= 0.01], j[weak_prob <= 0.01], 'red',
+            #      '/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "weak"))
+        if self._work_obs.is_xray_intensity_array():
+            ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t_i]
+            # plot(auspex_array[:, 0], auspex_array[:, 1], i[weak_prob <= 0.01], j[weak_prob <= 0.01], 'red',
+            #      '/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "weak"))
+
+
 
         auspex_array_for_fit = copy.deepcopy(auspex_array)
         auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1], 95) / auspex_array_for_fit[:, 0].max() * auspex_array[:, 0]
@@ -155,9 +169,8 @@ class NemoHandler(object):
         #feature_array = np.zeros(self._reso_low.size, dtype=int)
         #feature_array[np.isin(self._sorted_arg[:self._reso_select], ind_weak_work)] = np.arange(1, len(ind_weak_work) + 1)
         ind_cluster_by_size = []
-        #plot(auspex_array[:, 0], auspex_array[:, 1], i[weak_prob <= self._t], j[weak_prob <= self._t], '/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "weak"))
-
-        for num_points in range(ind_weak_work.size, 1, -1):
+        max_search_size = np.sum(weak_prob <= 0.015)
+        for num_points in range(max_search_size, 1, -1):
             #print(num_points)
             #detect = DBSCAN(eps=dist, min_samples=num_points)
             detect = HDBSCAN(min_cluster_size=num_points)
@@ -182,7 +195,7 @@ class NemoHandler(object):
                 in_prob = np.empty(0, dtype=float)
                 #print(unique_cluster_label)
                 for c_label in unique_cluster_label:
-                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.5)).flatten()
+                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.38)).flatten()
                     if args_.size == 0:
                         continue
                     ind_sub_cluster = self._sorted_arg[:self._reso_select][args_]
@@ -193,8 +206,17 @@ class NemoHandler(object):
                     # plt.scatter(auspex_array[:, 0], auspex_array[:, 1], s=3, alpha=0.5)
                     # plt.scatter(auspex_array[args_, 0], auspex_array[args_, 1], s=3, alpha=0.5)
                     # plt.savefig('/home/yui-local/test_img/{0}_{1}_{2}.png'.format(self._refl_data.file_name[-8:-4], num_points, c_label))
+
                     # plt.clf()
-                    if (wilson_filter.sum() / wilson_filter.size) > self._l:
+                    # plot(auspex_array[:, 0], auspex_array[:, 1],
+                    #      auspex_array[args_, 0], auspex_array[args_, 1],
+                    #      (np.random.random(), np.random.random(), np.random.random()),
+                    #      '/home/yui-local/test_img/{0}_{1}_{2}.png'.format(self._refl_data.file_name[-8:-4], num_points,
+                    #                                                        c_label))
+
+                    s_ij = (wilson_filter.sum() / wilson_filter.size) > self._l_i
+                    if ((self._work_obs.is_xray_amplitude_array() and s_ij > self._l) or
+                            (self._work_obs.is_xray_intensity_array() and s_ij > self._l_i)):
                         in_token = np.append(in_token, ind_sub_cluster)
                         in_prob = np.append(in_prob, cluster_prob[args_])
                 #args_ = np.argwhere(cluster_prob >= 0.8).flatten()
@@ -205,6 +227,10 @@ class NemoHandler(object):
                 #i_in = 1. / self._work_obs.d_spacings().data().as_numpy_array()[in_token]**2
 
                 ind_cluster_by_size.append(np.unique(in_token))
+                # plot(auspex_array[:, 0], auspex_array[:, 1], auspex_array[np.isin(self._sorted_arg[:self._reso_select], in_token), 0],
+                #      auspex_array[np.isin(self._sorted_arg[:self._reso_select], in_token), 1], 'red',
+                #      '/home/yui-local/test_img/{0}_{1}_{2}.png'.format(self._refl_data.file_name[-8:-4], num_points,
+                #                                                        c_label))
 
         if not ind_cluster_by_size:
             # when no cluster can be found we need to be very conservative thus level 0.02->0.005
@@ -223,18 +249,12 @@ class NemoHandler(object):
             final_weak_ind = ind_weak[weak_prob <= 1e-3]
         elif cluster_counts_recur.size == 2 and np.all(cluster_counts_recur == 1):
             # when the cluster only consists 2 elements and occurs only once,
-            # we tend to be more careful thus level 0.02->0.005
+            # we tend to be more careful
             final_weak_ind = ind_weak[weak_prob <= 1e-3]
         elif cluster_counts_recur.size == 2 and not np.all(cluster_counts_recur == 1):
             # when the cluster only consists 2 elements but occurs more than once,
             # we just kick out those occurring only once
             final_weak_ind = cluster_ind_recur[cluster_counts_recur > 1]
-        elif np.all(cluster_counts_recur == cluster_counts_recur[0]) and np.all(cluster_counts_recur == 1):
-            # when the cluster consists more than 2 elements but occurs only once,
-            # set level slightly higher than 0.01
-            # print(3)
-            ind_weak_and_cluster = np.isin(cluster_ind_recur, ind_weak[weak_prob <= 0.011])
-            final_weak_ind = cluster_ind_recur[ind_weak_and_cluster]
         elif np.all(cluster_counts_recur == cluster_counts_recur[0]) and not np.all(cluster_counts_recur == 1):
             # when the elements in the clusters are repetitive coherently. pass
             final_weak_ind = cluster_ind_recur
@@ -263,22 +283,26 @@ class NemoHandler(object):
         #     plot(auspex_array[:, 0], auspex_array[:, 1],
         #          1. / self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] ** 2,
         #          self._work_obs.data().as_numpy_array()[cluster_ind_recur]/self._work_obs.sigmas().as_numpy_array()[cluster_ind_recur],
+        #          'gold',
         #          '/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "cluster"))
         # if y_option_ == 'obs':
         #     plot(auspex_array[:, 0], auspex_array[:, 1],
         #          1. / self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] ** 2,
         #          self._work_obs.data().as_numpy_array()[cluster_ind_recur],
+        #          'gold',
         #          '/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "cluster"))
         #
         # if y_option_ == 'obs_over_sig':
         #     plot(auspex_array[:, 0], auspex_array[:, 1],
         #          1. / self._work_obs.d_spacings().data().as_numpy_array()[final_weak_ind] ** 2,
         #          self._work_obs.data().as_numpy_array()[final_weak_ind] / self._work_obs.sigmas().as_numpy_array()[final_weak_ind],
+        #          'blue',
         #          '/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "final"))
         # if y_option_ == 'obs':
         #     plot(auspex_array[:, 0], auspex_array[:, 1],
         #          1. / self._work_obs.d_spacings().data().as_numpy_array()[final_weak_ind] ** 2,
         #          self._work_obs.data().as_numpy_array()[final_weak_ind],
+        #          'blue',
         #          '/home/yui-local/test_img/{0}_{1}.png'.format(self._refl_data.file_name[-8:-4], "final"))
 
         #return self._work_obs.indices().as_vec3_double().as_numpy_array()[final_weak_ind].astype(int)
@@ -296,8 +320,8 @@ class NemoHandler(object):
             ind_false_sigma = np.argwhere(self._refl_data.sigI <= 0.).flatten()
         # indices recoverd by calculating how many indices in ind_false_sigma are smaller than any given index in final_weak_ind
         in_add = np.sum((self._final_weak_ind[:, None] - ind_false_sigma[None, :]) >= 0, axis=1)
-        recovered_ind = self._final_weak_ind + in_add
-        return recovered_ind
+        self._original_row_ind = self._final_weak_ind + in_add
+        return self._original_row_ind
 
     def ft_and_tar(self):
         return np.arange(0, self._reso_select), np.isin(self._sorted_arg[:self._reso_select], self._final_weak_ind).astype(int)
@@ -310,6 +334,28 @@ class NemoHandler(object):
             ind_weak = np.argwhere((self._refl_data.I / self._refl_data.sigI <= level)
                                    & (self._refl_data.resolution > 10.)).flatten()
         return ind_weak
+
+    def NEMO_removal(self, filename):
+        assert self._original_row_ind
+        isel = flex.size_t(self._original_row_ind)
+        self._refl_data._obj.delete_reflections(isel)
+        self._refl_data._obj.write(filename)
+
+    def write_filter_hkl(self, integrate_hkl_plain, hkl_array):
+        row_exclude = []
+        for hkl in hkl_array:
+            equiv_rows = integrate_hkl_plain.find_equiv_refl(*hkl)
+            print(equiv_rows)
+            for _ in equiv_rows:
+                if integrate_hkl_plain.corr[_] < 20 and ~np.any(integrate_hkl_plain.xyz_obs[_]):
+                    row_exclude.append(_)
+        lines = []
+        for row in row_exclude:
+            lines.append("{:2d} {:2d} {:2d} {:6.1f} {:6.1f} {:6.1f} 0.5 0.5 0.5\n".format(
+                *integrate_hkl_plain.hkl[row], *integrate_hkl_plain.xyz_cal[row]
+            ))
+        with open('FILTER.HKL', 'w') as f:
+            f.writelines(lines)
 
 def cumprob_c_amplitude(e):
     # probability of normalised centric amplitude smaller than e, given read e and sigma sig.
@@ -383,11 +429,13 @@ def delete_diag(square_matrix):
     s0, s1 = square_matrix.strides
     return np.lib.stride_tricks.as_strided(square_matrix.ravel()[1:], shape=(m-1, m), strides=(s0+s1, s1)).reshape(m, -1)
 
-def plot(x0 , y0, x1, y1, path):
-    fig, ax = plt.subplots(1,1, figsize=(4, 3))
-    ax.scatter(x0, y0, s=3, alpha=0.5)
-    ax.scatter(x1, y1, c='r', s=3, alpha=0.5)
-    #ax.set_xticks([])
-    #ax.set_yticks([])
+def plot(x0 , y0, x1, y1, c, path):
+    fig, ax = plt.subplots(1,1, figsize=(6, 6))
+    ax.scatter(x0, y0/np.percentile(y0, 95), color='grey', s=10, alpha=0.5)
+    ax.scatter(x1, y1/np.percentile(y0, 95), color=c, s=5, alpha=0.5)
+    ax.set_xticks([0., 0.002, 0.004, 0.006, 0.008, 0.01])
+    ax.set_yticks([])
+    ax.set_xticklabels(['inf', '22.4', '15.8', '12.9', '11.2', '10.0'])
     fig.tight_layout()
     fig.savefig(path, transparent=False, dpi=75)
+    plt.close(fig)

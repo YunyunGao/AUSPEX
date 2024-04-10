@@ -49,6 +49,14 @@ auspex.ReflectionData module
    :members:
    :undoc-members:
    :show-inheritance:
+   
+auspex.NEMO module
+============================
+
+.. automodule:: auspex.NEMO
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ===============
