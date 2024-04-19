@@ -403,15 +403,50 @@ class ReflectionParser(object):
     def get_miller_array(self, observation_type):
         """
 
-        :param observation_type: Column label.
+        :param observation_type: Can be either 'FP' or 'I'.
         :return: Miller array corresponding to the given column label
         """
         try:
             ma = self._obj.as_miller_arrays()
         except Exception as e:
             print(e.message, e.args)
-        ma_select = np.argwhere([observation_type in _.info().labels for _ in ma])[0][0]
-        return ma[ma_select]
+        if observation_type == 'FP':
+            if self.source_data_format == 'mtz':
+                for ma_type in ['FP', 'F', 'FMEANS']:
+                    try:
+                        ma_select = np.argwhere([ma_type in _.info().labels for _ in ma])[0][0]
+                        return_ma = ma[ma_select]
+                    except IndexError:
+                        continue
+            elif self.source_data_format == 'cif':
+                miller_arrays = self._obj.build_miller_arrays()
+                for model in miller_arrays.keys():
+                    for key in miller_arrays[model].keys():
+                        if 'F_meas' in key:
+                            return_ma = miller_arrays[model][key]
+        if observation_type == 'I':
+            if self.source_data_format == 'mtz':
+                for ma_type in ['I', 'IMEANS', 'IMEAN']:
+                    try:
+                        ma_select = np.argwhere([ma_type in _.info().labels for _ in ma])[0][0]
+                        return_ma = ma[ma_select]
+                    except IndexError:
+                        continue
+            elif self.source_data_format == 'cif':
+                miller_arrays = self._obj.build_miller_arrays()
+                wavelength_id = np.array(miller_arrays[model]['_refln.wavelength_id'].data())[0]
+                for model in miller_arrays.keys():
+                    for key in miller_arrays[model].keys():
+                        if ('intensity_meas' in key) and ('wavelength_id='+wavelength_id in key):
+                            if miller_arrays[model][key].anomalous_flag():
+                                continue
+                            else:
+                                return_ma = miller_arrays[model][key]
+        try:
+            return_ma
+        except NameError:
+            raise ValueError('Non-standard colum label')
+        return return_ma
 
 
 class MtzParser(ReflectionParser):

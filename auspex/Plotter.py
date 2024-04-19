@@ -5,6 +5,7 @@ import matplotlib
 import mpl_scatter_density
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
 
 # Set the font size and then set the maths font to san-serif
 matplotlib.rcParams['font.size'] = 8
@@ -173,27 +174,25 @@ class GenericPlot(object):
             ax1.add_patch(rectangle)
 
         have_ice_rings_been_flagged = False
+
+        # Core functions to calculate icefinder_score and helcaraxe_score
         if not self.no_automatic:
-            score = icefinder_handle.icefinder_scores()
-            with np.errstate(invalid='ignore'):
-                args_possible_ice = np.abs(score) >= self.cutoff
-            args_in_ice_ring = icefinder_handle.is_in_ice_ring()
-            args_ice = np.logical_and(args_possible_ice, args_in_ice_ring)
-            mean_ires_squared = icefinder_handle.mean_ires_squared()
-            args_plot = np.any((mean_ires_squared[args_ice][:, None] >= self.ice_rings[:, 0][None, :]) &
-                               (mean_ires_squared[args_ice][:, None] <= self.ice_rings[:, 1][None, :]),
-                               axis=0)
-            for lb, ub in self.ice_rings[args_plot]:
+            if icefinder_handle.helcaraxe_status:
+                ice_spike_range = icefinder_handle.ice_range_by_helcaraxe()
+            else:
+                ice_spike_range = icefinder_handle.ice_range_by_icefinderscore(cutoff=self.cutoff)
+            ice_spike_scores = icefinder_handle.quantitative_score()
+            for ranges, scores in zip(ice_spike_range, ice_spike_scores):
+                lb, ub = ranges
                 rectangle = matplotlib.patches.Rectangle(
                     (lb, ymin),
                     ub - lb,
                     ymax - ymin,
                     color="red",
                     zorder=1,
-                    alpha=0.15,
+                    alpha=0.5*scores,
                     linewidth=0)
                 ax1.add_patch(rectangle)
-                have_ice_rings_been_flagged = True
 
         if have_ice_rings_been_flagged:
             if os.path.exists("mtz_with_ice_ring.txt"):
@@ -596,7 +595,7 @@ class PlotGenerator(object):
                              no_automatic=self._no_automatic)
         plot.generate(self.icefinder_handle, D2, BSigB)
 
-    def generate(self, icefinder_handle):
+    def generate(self, icefinder_handle, nemo_handle=None):
         """
         Generate all the plots
 
@@ -623,6 +622,15 @@ class PlotGenerator(object):
                 self.generate_I_plot(iobs, isigma, reso_data, ax=ax1)
                 self.generate_SigI_plot(iobs, isigma, reso_data, ax=ax2)
                 self.generate_ISigI_plot(iobs, isigma, reso_data, ax=ax3)
+
+                #plot nemo
+                if nemo_handle is not None:
+                    nemo_handle.refl_data_prepare(self.icefinder_handle._reflection_data, 'I')
+                    nemo_handle.cluster_detect(0)
+                    generate_nemo_plot(ax1, nemo_handle, 'I')
+                    generate_nemo_plot(ax2, nemo_handle, 'sigI')
+                    generate_nemo_plot(ax3, nemo_handle, 'I_over_sigI')
+
                 filename = os.path.join(self.output_directory, "intensities.png")
                 plt.tight_layout()
                 plt.savefig(filename, dpi=self._dpi, bbox_inches='tight')
@@ -667,10 +675,20 @@ class PlotGenerator(object):
                 self.generate_F_plot(fobs, fsigma, reso_data, ax=ax1)
                 self.generate_SigF_plot(fobs, fsigma, reso_data, ax=ax2)
                 self.generate_FSigF_plot(fobs, fsigma, reso_data, ax=ax3)
+
+                # plot nemo
+                if nemo_handle is not None:
+                    nemo_handle.refl_data_prepare(self.icefinder_handle._reflection_data, 'FP')
+                    nemo_handle.cluster_detect(0)
+                    generate_nemo_plot(ax1, nemo_handle, 'F')
+                    generate_nemo_plot(ax2, nemo_handle, 'sigF')
+                    generate_nemo_plot(ax3, nemo_handle, 'F_over_sigF')
+
                 filename = os.path.join(self.output_directory, "amplitudes.png")
                 plt.tight_layout()
                 plt.savefig(filename, dpi=self._dpi, bbox_inches='tight')
                 plt.clf()
+
 
             if not self._no_individual_figures:
                 ax1 = None
@@ -710,3 +728,27 @@ class PlotGenerator(object):
                 self.generate_SigB_plot(bobs, bsigma, reso_data, ax=ax2)
                 self.generate_BSigB_plot(bobs, bsigma, reso_data, ax=ax3)
 
+
+def generate_nemo_plot(ax, nemo_handler, data_type):
+    nemo_D2 = nemo_handler.get_nemo_D2()
+    if data_type in ['I', 'F']:
+        nemo_y = nemo_handler.get_nemo_data()
+    elif data_type in ['sigI', 'sigF']:
+        nemo_y = nemo_handler.get_nemo_sig()
+    elif data_type in ['I_over_sigI', 'F_over_sigF']:
+        nemo_y = nemo_handler.get_nemo_data_over_sig()
+    ax.scatter(nemo_D2,
+               nemo_y,
+               8,
+               zorder=3,
+               color="#d60019",
+               alpha=0.9,
+               linewidth=0
+               )
+
+    # bbox_props = dict(boxstyle="round", fc=None, ec="#d60019", lw=1)
+    # bbox = FancyBboxPatch((nemo_resolution.max()*2, nemo_y-0.5),
+    #                       width=nemo_resolution.max() - nemo_resolution.min() + (nemo_resolution.max() - nemo_resolution.min())*0.05,
+    #                       height=nemo_y.max() - nemo_y.min() + (nemo_y.max() - nemo_y.min())*0.05,
+    #                       **bbox_props)
+    # self.ax.add_patch(bbox)

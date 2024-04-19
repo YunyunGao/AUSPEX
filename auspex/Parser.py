@@ -6,7 +6,8 @@ from os.path import exists, basename, splitext
 from Plotter import PlotGenerator
 from Auspex import IceFinder
 from IceRings import IceRing
-from ReflectionData import FileReader
+from NEMO import NemoHandler
+from ReflectionData import FileReader, IntegrateHKLPlain
 from Verbose import MergeStatistics
 
 command_line = ' '.join(sys.argv[1:])
@@ -27,9 +28,17 @@ parser.add_argument(
 parser.add_argument(
     '--helcaraxe',
     dest='helcaraxe',
-    action="store_false",
+    action='store_false',
     default=True,
-    help='Use CNN model to predict ice contamination. The default option'
+    help='Use CNN model to predict ice contamination. The default option.'
+)
+
+parser.add_argument(
+    '--beamstop_outlier',
+    dest='beamstop_outlier',
+    action='store_false',
+    default=True,
+    help='Use clustering-derived method to detect beamstop shadow outliers. True by default.'
 )
 
 parser.add_argument(
@@ -153,7 +162,24 @@ parser.add_argument(
     '--input-type',
     dest='input_type',
     default=None,
-    help='Specify the input file type or integration software used .'
+    help='Specify the input file type or integration software being used.'
+)
+
+parser.add_argument(
+    '--nemo-removal',
+    dest='nemo_removal',
+    action='store_true',
+    default=False,
+    help='Remove beamstop shadow outliers from the given HKLIN.'
+)
+
+parser.add_argument(
+    '--generate-xds-filter',
+    dest='xds_filter',
+    type=str,
+    nargs=1,
+    help='Write FLITER.HKL for XDS to correctly exclude beamstop shadow outliers during scaling and merging. '
+         'The path to INTEGRATED.HKL must be provided.'
 )
 
 args = parser.parse_args()
@@ -190,6 +216,7 @@ if exists(filename):
             merge_stats.print_stats_table()
         #except:
          #   pass
+
     ice_info = IceFinder(reflection_data, ice, use_anom_if_present=args.use_anom_if_present)
     if args.helcaraxe is True:
         ice_info.run_helcaraxe()
@@ -203,6 +230,11 @@ if exists(filename):
             ice_info.binning('I_ano', binning=args.binning)
         except AssertionError:
             ice_info.binning('I', binning=args.binning)
+
+    if args.beamstop_outlier:
+        nemo_info = NemoHandler()
+    else:
+        nemo_info = None
 
     # Write a text file
     if args.text_filename is not None:
@@ -223,7 +255,7 @@ if exists(filename):
 
     plot.name_stub = name_stub  # = join(output_directory, "%s.png" % )
 
-    plot.generate(ice_info)
+    plot.generate(ice_info, nemo_info)
 
     have_ice_rings_been_flagged = ice_info.has_ice_rings
 
@@ -232,6 +264,8 @@ if exists(filename):
             os.remove("mtz_with_ice_ring.txt")
         outfile = open("mtz_with_ice_rings.txt", "a")
         print(os.path.split(filename)[1], file=outfile)
+
+
 
 else:
     print("File {0} does not exist.".format(filename))

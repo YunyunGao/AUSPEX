@@ -9,7 +9,7 @@ setup(
     author='Yunyun Gao',
     author_email='yunyun.gao@desy.de',
     packages=['auspex', ],
-    package_data={'auspex': ['lib/dials_array_family_flex_ext.so', 'lib/dxtbx_model_ext.so'],
+    package_data={'auspex': ['lib/int_lib.so'],
     },
     include_package_data=True,
     license='LICENSE.txt',
