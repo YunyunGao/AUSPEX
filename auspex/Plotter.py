@@ -595,7 +595,7 @@ class PlotGenerator(object):
                              no_automatic=self._no_automatic)
         plot.generate(self.icefinder_handle, D2, BSigB)
 
-    def generate(self, icefinder_handle, nemo_handle=None):
+    def generate(self, icefinder_handle, nemo_handle_F=None, nemo_handle_I=None):
         """
         Generate all the plots
 
@@ -624,12 +624,12 @@ class PlotGenerator(object):
                 self.generate_ISigI_plot(iobs, isigma, reso_data, ax=ax3)
 
                 #plot nemo
-                if nemo_handle is not None:
-                    nemo_handle.refl_data_prepare(self.icefinder_handle._reflection_data, 'I')
-                    nemo_handle.cluster_detect(0)
-                    generate_nemo_plot(ax1, nemo_handle, 'I')
-                    generate_nemo_plot(ax2, nemo_handle, 'sigI')
-                    generate_nemo_plot(ax3, nemo_handle, 'I_over_sigI')
+                if nemo_handle_I is not None:
+                    #nemo_handle.refl_data_prepare(self.icefinder_handle._reflection_data, 'I')
+                    #nemo_handle.cluster_detect(0)
+                    generate_nemo_plot(ax1, nemo_handle_I, 'I')
+                    generate_nemo_plot(ax2, nemo_handle_I, 'sigI')
+                    generate_nemo_plot(ax3, nemo_handle_I, 'I_over_sigI')
 
                 filename = os.path.join(self.output_directory, "intensities.png")
                 plt.tight_layout()
@@ -677,12 +677,12 @@ class PlotGenerator(object):
                 self.generate_FSigF_plot(fobs, fsigma, reso_data, ax=ax3)
 
                 # plot nemo
-                if nemo_handle is not None:
-                    nemo_handle.refl_data_prepare(self.icefinder_handle._reflection_data, 'FP')
-                    nemo_handle.cluster_detect(0)
-                    generate_nemo_plot(ax1, nemo_handle, 'F')
-                    generate_nemo_plot(ax2, nemo_handle, 'sigF')
-                    generate_nemo_plot(ax3, nemo_handle, 'F_over_sigF')
+                if nemo_handle_F is not None:
+                    #nemo_handle_F.refl_data_prepare(self.icefinder_handle._reflection_data, 'FP')
+                    #nemo_handle_F.cluster_detect(0)
+                    generate_nemo_plot(ax1, nemo_handle_F, 'F')
+                    generate_nemo_plot(ax2, nemo_handle_F, 'sigF')
+                    generate_nemo_plot(ax3, nemo_handle_F, 'F_over_sigF')
 
                 filename = os.path.join(self.output_directory, "amplitudes.png")
                 plt.tight_layout()

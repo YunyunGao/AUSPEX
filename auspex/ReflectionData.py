@@ -2203,16 +2203,16 @@ def _get_bins_by_binwidth(ires, bin_width):
     return binning
 
 
-def _get_binned_by_multiplicity(quantity_array, sorted_args_by_ires, total_bin_number):
-    # sorted_args = [np.argsort(_) for _ in quantity_array]
-    # find the index of multiplicity with the maximum observation
-    idx_multi_max_obs = np.argmax([_.size for _ in sorted_args_by_ires])
-    #ind_list = [_binning_idx(_.size, total_bin_number) for _ in quantity_array]
-    ind_list = _binning_idx(quantity_array[idx_multi_max_obs].size, total_bin_number)
-    binned_quantity_by_multiplicity = []
-    for i, arg, ind in zip(quantity_array, sorted_args_by_ires, ind_list):
-        binned_quantity_by_multiplicity.append([i[arg][lower: upper] for lower, upper in ind])
-    return binned_quantity_by_multiplicity
+# def _get_binned_by_multiplicity(quantity_array, sorted_args_by_ires, total_bin_number):
+#     # sorted_args = [np.argsort(_) for _ in quantity_array]
+#     # find the index of multiplicity with the maximum observation
+#     idx_multi_max_obs = np.argmax([_.size for _ in sorted_args_by_ires])
+#     #ind_list = [_binning_idx(_.size, total_bin_number) for _ in quantity_array]
+#     ind_list = _binning_idx(quantity_array[idx_multi_max_obs].size, total_bin_number)
+#     binned_quantity_by_multiplicity = []
+#     for i, arg, ind in zip(quantity_array, sorted_args_by_ires, ind_list):
+#         binned_quantity_by_multiplicity.append([i[arg][lower: upper] for lower, upper in ind])
+#     return binned_quantity_by_multiplicity
 
 
 def _binning_idx_even(array_size, num_of_bins):

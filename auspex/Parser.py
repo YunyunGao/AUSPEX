@@ -170,7 +170,7 @@ parser.add_argument(
     dest='nemo_removal',
     action='store_true',
     default=False,
-    help='Remove beamstop shadow outliers from the given HKLIN.'
+    help='Remove beamstop shadow outliers from the given HKLIN. Currently only support mtz format.'
 )
 
 parser.add_argument(
@@ -206,6 +206,7 @@ if exists(filename):
     #auspex_package_dir = os.path.join(share, 'auspex')
     #auspex_package_data_dir = os.path.join(auspex_package_dir, 'data')
 
+    # Handling icerings
     ice = IceRing()
     reflection_data = FileReader(filename, args.input_type, args.unit_cell, args.space_group_number)
     print(reflection_data.source_data_format)
@@ -231,10 +232,45 @@ if exists(filename):
         except AssertionError:
             ice_info.binning('I', binning=args.binning)
 
+    # Handling beamstop shadow outliers
     if args.beamstop_outlier:
-        nemo_info = NemoHandler()
+        if ice_info.fobs is not None:
+            nemo_info_F = NemoHandler()
+            nemo_info_F.refl_data_prepare(ice_info._reflection_data, 'FP')
+            nemo_info_F.cluster_detect(0)
+        if ice_info.iobs is not None:
+            nemo_info_I = NemoHandler()
+            nemo_info_I.refl_data_prepare(ice_info._reflection_data, 'I')
+            nemo_info_I.cluster_detect(0)
+
+        if args.nemo_removal:
+            if reflection_data.source_data_format is not "mtz":
+                print("NEMO removal can only be applied to MTZ. The format of HKLIN provided is: {0}".format(reflection_data.source_data_format))
+            else:
+                if ice_info.fobs is not None:
+                    nemo_info_F.add_false_sigma_record_back()
+                    nemo_info_F.NEMO_removal(args.nemo_removal[:-4] + '_F_nemo_removed.mtz')
+                if ice_info.iobs is not None:
+                    nemo_info_I.add_false_sigma_record_back()
+                    nemo_info_I.NEMO_removal(args.nemo_removal[:-4] + '_I_nemo_removed.mtz')
+
+        if args.xds_filter:
+            from auspex.ReflectionData import IntegrateHKLPlain
+            # try fobs first since NEMO detection is more accurate with fobs.
+            if ice_info.fobs is not None:
+                hkl_nemo = nemo_info_F.get_nemo_indices()
+                hkl_plain = IntegrateHKLPlain()
+                hkl_plain.read_hkl(args.xds_filter)
+                nemo_info_F.write_filter_hkl(hkl_plain, hkl_nemo)
+            elif ice_info.iobs is not None:
+                hkl_nemo = nemo_info_I.get_nemo_indices()
+                hkl_plain = IntegrateHKLPlain()
+                hkl_plain.read_hkl(args.xds_filter)
+                nemo_info_I.write_filter_hkl(hkl_plain, hkl_nemo)
     else:
-        nemo_info = None
+        nemo_info_F = None
+        nemo_info_I = None
+
 
     # Write a text file
     if args.text_filename is not None:
