@@ -7,7 +7,7 @@ from Plotter import PlotGenerator
 from Auspex import IceFinder
 from IceRings import IceRing
 from NEMO import NemoHandler
-from ReflectionData import FileReader, IntegrateHKLPlain
+from ReflectionData import AutoReader
 from Verbose import MergeStatistics
 
 command_line = ' '.join(sys.argv[1:])
@@ -249,23 +249,24 @@ if exists(filename):
             else:
                 if ice_info.fobs is not None:
                     nemo_info_F.add_false_sigma_record_back()
-                    nemo_info_F.NEMO_removal(args.nemo_removal[:-4] + '_F_nemo_removed.mtz')
+                    nemo_info_F.NEMO_removal(filename[:-4] + '_F_nemo_removed.mtz')
                 if ice_info.iobs is not None:
                     nemo_info_I.add_false_sigma_record_back()
-                    nemo_info_I.NEMO_removal(args.nemo_removal[:-4] + '_I_nemo_removed.mtz')
+                    nemo_info_I.NEMO_removal(filename[:-4] + '_I_nemo_removed.mtz')
 
         if args.xds_filter:
-            from auspex.ReflectionData import IntegrateHKLPlain
+            from auspex.ReflectionData import PlainASCII
             # try fobs first since NEMO detection is more accurate with fobs.
+            hkl_plain_filename = args.xds_filter[0]
             if ice_info.fobs is not None:
                 hkl_nemo = nemo_info_F.get_nemo_indices()
                 hkl_plain = IntegrateHKLPlain()
-                hkl_plain.read_hkl(args.xds_filter)
+                hkl_plain.read_hkl(hkl_plain_filename)
                 nemo_info_F.write_filter_hkl(hkl_plain, hkl_nemo)
             elif ice_info.iobs is not None:
                 hkl_nemo = nemo_info_I.get_nemo_indices()
                 hkl_plain = IntegrateHKLPlain()
-                hkl_plain.read_hkl(args.xds_filter)
+                hkl_plain.read_hkl(hkl_plain_filename)
                 nemo_info_I.write_filter_hkl(hkl_plain, hkl_nemo)
     else:
         nemo_info_F = None
@@ -291,7 +292,7 @@ if exists(filename):
 
     plot.name_stub = name_stub  # = join(output_directory, "%s.png" % )
 
-    plot.generate(ice_info, nemo_info)
+    plot.generate(ice_info, nemo_info_F, nemo_info_I)
 
     have_ice_rings_been_flagged = ice_info.has_ice_rings
 

@@ -6,15 +6,13 @@ from numpy.linalg import norm
 
 import os, ctypes
 from scipy import LowLevelCallable
-from scipy.special import pbdv, erfc
-from scipy.integrate import quad, nquad
+from scipy.special import erfc
+from scipy.integrate import nquad
 
-from sklearn.cluster import HDBSCAN, DBSCAN
+from sklearn.cluster import HDBSCAN
 
 from cctbx.array_family import flex
-from mmtbx.scaling import absolute_scaling, outlier_rejection
-
-from ReflectionData import FileReader, IntegrateHKLPlain
+from mmtbx.scaling import absolute_scaling
 
 import matplotlib.pyplot as plt
 
@@ -24,8 +22,6 @@ lib.f.restype = ctypes.c_double
 lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p)
 
 warnings.filterwarnings("ignore", message="The integral is probably divergent, or slowly convergent.")
-
-reflection_data = FileReader('/media/yui-local/Scratch/works/mtz_with_raw_img/mtz/5usx.mtz', 'mtz', None, None)
 
 
 class NemoHandler(object):
@@ -269,7 +265,7 @@ class NemoHandler(object):
         return ind_weak
 
     def NEMO_removal(self, filename):
-        assert self._original_row_ind
+        assert self._original_row_ind is not None
         isel = flex.size_t(self._original_row_ind)
         self._refl_data._obj.delete_reflections(isel)
         self._refl_data._obj.write(filename)
@@ -278,7 +274,7 @@ class NemoHandler(object):
         row_exclude = []
         for hkl in hkl_array:
             equiv_rows = integrate_hkl_plain.find_equiv_refl(*hkl)
-            print(equiv_rows)
+            #print(equiv_rows)
             for _ in equiv_rows:
                 if integrate_hkl_plain.corr[_] < 20 and ~np.any(integrate_hkl_plain.xyz_obs[_]):
                     row_exclude.append(_)

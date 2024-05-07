@@ -96,7 +96,7 @@ class NemoHandler(object):
 
             ac_outlier_flag = self._prob_ac < prob_level
             if c_obs.sum() == 0:  # no centric reflections
-                self._prob_c = np.array([],dtype=float)
+                self._prob_c = np.array([], dtype=float)
                 c_outlier_flag = np.array([], dtype=bool)
             else:
                 self._prob_c = cumprob_c_intensity(c_obs, c_sigs)
@@ -242,7 +242,7 @@ class NemoHandler(object):
         assert self._final_nemo_ind is not None
         return self._work_obs.data().as_numpy_array()[self._final_nemo_ind] / self._work_obs.sigmas().as_numpy_array()[self._final_nemo_ind]
 
-    def add_false_sigma_record_back(self):
+    def add_false_sigma_record_back(self, return_idx=False):
         # miller array automatically remove invalid observations with 0 or negative sigma.
         # for any operation on the original record, the row number of the original records is needed
         # following code calculate the row number before removing invalid observations
@@ -253,7 +253,8 @@ class NemoHandler(object):
         # indices recoverd by calculating how many indices in ind_false_sigma are smaller than any given index in final_nemo_ind
         in_add = np.sum((self._final_nemo_ind[:, None] - ind_false_sigma[None, :]) >= 0, axis=1)
         self._original_row_ind = self._final_nemo_ind + in_add
-        return self._original_row_ind
+        if return_idx is True:
+            return self._original_row_ind
 
     def ft_and_tar(self):
         return np.arange(0, self._reso_select), np.isin(self._sorted_arg[:self._reso_select], self._final_nemo_ind).astype(int)
@@ -268,7 +269,7 @@ class NemoHandler(object):
         return ind_weak
 
     def NEMO_removal(self, filename):
-        assert self._original_row_ind
+        assert self._original_row_ind is not None
         isel = flex.size_t(self._original_row_ind)
         self._refl_data._obj.delete_reflections(isel)
         self._refl_data._obj.write(filename)
