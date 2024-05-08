@@ -9,10 +9,8 @@ auspex/IceRings.py
 auspex/NEMO.py
 auspex/Parser.py
 auspex/Plotter.py
-auspex/ReflectionData.py
 auspex/Verbose.py
 auspex/__init__.py
-auspex/test.py
 auspex.egg-info/PKG-INFO
 auspex.egg-info/SOURCES.txt
 auspex.egg-info/dependency_links.txt
@@ -27,4 +25,14 @@ auspex/Helcaraxe_models/final_models/Helcaraxe_Iobs_model/keras_metadata.pb
 auspex/Helcaraxe_models/final_models/Helcaraxe_Iobs_model/saved_model.pb
 auspex/Helcaraxe_models/final_models/Helcaraxe_Iobs_model/variables/variables.data-00000-of-00001
 auspex/Helcaraxe_models/final_models/Helcaraxe_Iobs_model/variables/variables.index
+auspex/ReflectionData/AutoReader.py
+auspex/ReflectionData/Cif.py
+auspex/ReflectionData/Dials.py
+auspex/ReflectionData/Mtz.py
+auspex/ReflectionData/PlainASCII.py
+auspex/ReflectionData/ReflectionBase.py
+auspex/ReflectionData/Sca.py
+auspex/ReflectionData/Shlex.py
+auspex/ReflectionData/Xds.py
+auspex/ReflectionData/__init__.py
 auspex/lib/int_lib.so

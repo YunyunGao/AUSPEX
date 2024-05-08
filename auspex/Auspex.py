@@ -1,4 +1,3 @@
-from ReflectionData import *
 from BinnedData import BinnedSummaries
 from IceRings import IceRing
 from Helcaraxe import cnn_predict

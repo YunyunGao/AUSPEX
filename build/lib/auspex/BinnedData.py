@@ -1,7 +1,4 @@
-from ReflectionData import Observation
-from IceRings import IceRing
 import numpy as np
-import copy
 
 
 class BinnedSummaries(object):

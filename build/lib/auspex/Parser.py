@@ -7,7 +7,9 @@ from Plotter import PlotGenerator
 from Auspex import IceFinder
 from IceRings import IceRing
 from NEMO import NemoHandler
-from ReflectionData import FileReader, IntegrateHKLPlain
+#import ReflectionData
+from ReflectionData.AutoReader import FileReader
+from ReflectionData.PlainASCII import IntegrateHKLPlain
 from Verbose import MergeStatistics
 
 command_line = ' '.join(sys.argv[1:])

@@ -1,6 +1,6 @@
 import os
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command import install
 
 setup(
@@ -8,7 +8,7 @@ setup(
     version='2.0.0',
     author='Yunyun Gao',
     author_email='yunyun.gao@desy.de',
-    packages=['auspex', ],
+    packages=find_packages(),
     package_data={'auspex': ['lib/int_lib.so'],
     },
     include_package_data=True,

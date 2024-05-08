@@ -2,7 +2,6 @@ import copy
 import warnings
 
 import numpy as np
-from numpy.linalg import norm
 
 import os, ctypes
 from scipy import LowLevelCallable
