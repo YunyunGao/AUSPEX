@@ -625,8 +625,6 @@ class PlotGenerator(object):
 
                 #plot nemo
                 if nemo_handle_I is not None:
-                    #nemo_handle.refl_data_prepare(self.icefinder_handle._reflection_data, 'I')
-                    #nemo_handle.cluster_detect(0)
                     generate_nemo_plot(ax1, nemo_handle_I, 'I')
                     generate_nemo_plot(ax2, nemo_handle_I, 'sigI')
                     generate_nemo_plot(ax3, nemo_handle_I, 'I_over_sigI')
@@ -638,13 +636,28 @@ class PlotGenerator(object):
                 #print "single figure: %s" % (self.single_figure)
 
             if not self._no_individual_figures:
-                ax1 = None
-                ax2 = None
-                ax3 = None
+                fig1, ax1 = plt.subplots(1, 1, subplot_kw={'projection': 'scatter_density'},
+                                         figsize=(self._plotwidth, np.sqrt(2)/3 * self._plotwidth))
+                fig2, ax2 = plt.subplots(1, 1, subplot_kw={'projection': 'scatter_density'},
+                                         figsize=(self._plotwidth, np.sqrt(2)/3 * self._plotwidth))
+                fig3, ax3 = plt.subplots(1, 1, subplot_kw={'projection': 'scatter_density'},
+                                         figsize=(self._plotwidth, np.sqrt(2)/3 * self._plotwidth))
                 # Generate intensity plots
                 self.generate_I_plot(iobs, isigma, reso_data, ax=ax1)
                 self.generate_SigI_plot(iobs, isigma, reso_data, ax=ax2)
                 self.generate_ISigI_plot(iobs, isigma, reso_data, ax=ax3)
+
+                #plot nemo
+                if nemo_handle_I is not None:
+                    generate_nemo_plot(ax1, nemo_handle_I, 'I')
+                    generate_nemo_plot(ax2, nemo_handle_I, 'sigI')
+                    generate_nemo_plot(ax3, nemo_handle_I, 'I_over_sigI')
+
+                plt.tight_layout()
+                fig1.savefig(os.path.join(self.output_directory, "I_plot.png"), dpi=self._dpi, bbox_inches='tight')
+                fig2.savefig(os.path.join(self.output_directory, "SigI_plot.png"), dpi=self._dpi, bbox_inches='tight')
+                fig3.savefig(os.path.join(self.output_directory, "IOverSigI_plot.png"), dpi=self._dpi, bbox_inches='tight')
+                plt.clf()
 
             if self._score_figure:
                 figure = plt.figure(figsize=(self._plotwidth, np.sqrt(2) * self._plotwidth))
