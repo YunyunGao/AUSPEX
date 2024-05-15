@@ -4,10 +4,6 @@ import argparse
 from argparse import RawTextHelpFormatter
 from os.path import exists, basename, splitext
 from Plotter import PlotGenerator
-
-print("Loading HELCARAXE CNN model. This can take some time...")
-print("_______________________________________________________________________________\n")
-
 from Auspex import IceFinder
 from IceRings import IceRing
 from NEMO import NemoHandler

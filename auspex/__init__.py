@@ -7,6 +7,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'Helcara
 #bp.import_ext('dxtbx_model_ext')
 
 def run():
+    print("Loading HELCARAXE CNN model. This can take some time...")
+    print("_______________________________________________________________________________\n")
     import Parser
 
 if __name__ == '__main__':
