@@ -623,7 +623,7 @@ class PlotGenerator(object):
                 self.generate_SigI_plot(iobs, isigma, reso_data, ax=ax2)
                 self.generate_ISigI_plot(iobs, isigma, reso_data, ax=ax3)
 
-                #plot nemo
+                #  plot nemo
                 if nemo_handle_I is not None:
                     generate_nemo_plot(ax1, nemo_handle_I, 'I')
                     generate_nemo_plot(ax2, nemo_handle_I, 'sigI')

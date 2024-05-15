@@ -239,10 +239,14 @@ if exists(filename):
             nemo_info_F = NemoHandler()
             nemo_info_F.refl_data_prepare(ice_info._reflection_data, 'FP')
             nemo_info_F.cluster_detect(0)
+        else:
+            nemo_info_F = None
         if ice_info.iobs is not None:
             nemo_info_I = NemoHandler()
             nemo_info_I.refl_data_prepare(ice_info._reflection_data, 'I')
             nemo_info_I.cluster_detect(0)
+        else:
+            nemo_info_I = None
 
         if args.nemo_removal:
             if reflection_data.source_data_format is not "mtz":
