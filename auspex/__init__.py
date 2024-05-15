@@ -8,8 +8,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'Helcara
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 def run():
-    print("Loading HELCARAXE CNN model. This can take some time...")
-    print("_______________________________________________________________________________\n")
     import Parser
 
 if __name__ == '__main__':

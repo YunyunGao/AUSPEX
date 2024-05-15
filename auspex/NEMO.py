@@ -20,8 +20,6 @@ lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'lib/int_lib.so'))
 lib.f.restype = ctypes.c_double
 lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p)
 
-warnings.filterwarnings("ignore", message="The integral is probably divergent, or slowly convergent.")
-
 
 class NemoHandler(object):
     def __init__(self, reso_min=10.):

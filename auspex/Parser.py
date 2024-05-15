@@ -9,7 +9,9 @@ from IceRings import IceRing
 from NEMO import NemoHandler
 from ReflectionData.AutoReader import FileReader
 from ReflectionData.PlainASCII import IntegrateHKLPlain
-from Verbose import MergeStatistics
+from Verbose import MergeStatistics, suppress_warnings
+
+suppress_warnings()
 
 command_line = ' '.join(sys.argv[1:])
 
