@@ -5,8 +5,6 @@ This .py takes I_obs, F_obs and Resolution values and out of this produces plots
 of resolution ranges in which ice rings can appear.
 These plots are classified by a CNN model and the prediction is returned as a numpy array
 """
-print("Loading HELCARAXE CNN model. This can take some time...")
-print("_______________________________________________________________________________\n")
 
 import numpy as np
 import scipy as scp
