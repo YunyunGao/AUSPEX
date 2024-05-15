@@ -1,6 +1,8 @@
 from BinnedData import BinnedSummaries
 from IceRings import IceRing
+
 from Helcaraxe import cnn_predict
+
 import numpy as np
 import copy
 
