@@ -44,7 +44,7 @@ class NemoHandler(object):
         self._detect_option = ['obs_over_sig', 'obs']
         self._t = 0.0248  # hyperparamter t: french_wilson_level, trained 0.0248
         self._t_i = 0.0565  # hyperparamter t for intensity: trained 0.0565
-        self._l = 0.296  # hyperparameter l: intersection fraction, trained 0.296
+        self._l = 0.496  # hyperparameter l: intersection fraction, trained 0.496
         self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, trained 0.598
         self._m1 = 0.100  # recurrence rate below 30 Angstrom, neither important for F nor I
         self._m2 = 0.598  # recurrence rate between 30-20 Angstrom, trained 0.598. not important for F, important for I
@@ -193,10 +193,10 @@ class NemoHandler(object):
         cluster_ind_recur, cluster_counts_recur = np.unique(np.concatenate(ind_cluster_by_size), return_counts=True)
         if cluster_ind_recur.size == 0 or cluster_ind_recur.size == 1:
             # when the intersection of the cluster and wilson outliers has only one element,
-            # we need to be very conservative thus level 0.02->0.005
+            # we need to be very conservative thus level 0.01->0.001
             final_weak_ind = ind_weak[weak_prob <= 1e-3]
         else:
-            # when the elements in the clusters are varying. only those with 0.8 occurrence rate will pass
+            # when the elements in the clusters are varying.
             repetitive_ind_30 = (cluster_counts_recur >= cluster_counts_recur.max() * self._m1) & \
                                 (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 30.)
             repetitive_ind_20 = (cluster_counts_recur >= cluster_counts_recur.max() * self._m2) & \
