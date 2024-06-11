@@ -23,8 +23,8 @@ lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p
 
 class NemoHandler(object):
     def __init__(self, reso_min=10.):
-        """Constructor class for automatic NEMO detection. Default hyperparameters t,l,m1,m2,m3 are trained on the
-        reflection data.
+        """Constructor class for automatic NEMO detection. Default hyperparameters t,l,m1,m2,m3 (t_i, l_i, for intensities)
+        are trained on the reflection data.
 
         :param reso_min: minimum resolution to check.
         :type reso_min: float.
@@ -51,6 +51,12 @@ class NemoHandler(object):
         self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, trained 0.787. neither important for F nor I
 
     def refl_data_prepare(self, reflection_data, observation_label='FP'):
+        """Construct the initial set A. Conduct kernal normalization. The centric reflections and acentric reflections
+
+        :param reflection_data: One of the supported ReflectionData instance.
+        :param observation_label: The label of the observation. Can be 'FP' ('F', 'FMEANS') or 'I' ('IMEANS', 'IMEAN').
+        :return: None.
+        """
         self._refl_data = reflection_data
         self._work_obs = reflection_data.get_miller_array(observation_label)
         d_spacings = self._work_obs.d_spacings().data().as_numpy_array()
@@ -74,7 +80,13 @@ class NemoHandler(object):
         self._centric_ind_low = self._sorted_arg[:self._reso_select][self._centric_flag]
         self._acentric_ind_low = self._sorted_arg[:self._reso_select][self._acentric_flag]
 
-    def outliers_by_wilson(self, prob_level=0.02):
+    def outliers_by_wilson(self, prob_level=0.01):
+        """Find outliers by Wilson statistics. Calculate the probability of a reflection smaller than a certain value
+        to be observed according to Wilson statistics. Return those with probability smaller than prob_level.
+
+        :param prob_level: The probability threshold to be applied. Default value 0.01.
+        :return: tuple [outlier flags for acentric reflections, outlier flags for centric reflections]
+        """
         ac_obs = self._work_norma_obs.data().as_numpy_array()[self._acentric_ind_low]
         c_obs = self._work_norma_obs.data().as_numpy_array()[self._centric_ind_low]
         if self._work_norma_obs.is_xray_amplitude_array():
@@ -99,6 +111,13 @@ class NemoHandler(object):
         return ac_outlier_flag, c_outlier_flag
 
     def mmtbx_beamstop_outlier(self, level=0.01):
+        """Return the row indices of beamstop outliers identified according to the probability threshold set by
+        mmtbx.scale.outlier_rejection.
+
+        :param level: Default probability threshold set by mmtbx.scale.outlier_rejection: 0.01.
+        :return: Row indices of the identified outliers.
+        :rtype: numpy.ndarray(dtype=int)
+        """
         if self._work_norma_obs.is_xray_amplitude_array():
         # the default level for beamstop outliers in mmtbx.scaling::outlier_rejection is set to 0.01
             ac_outlier_flag, c_outlier_flag = self.outliers_by_wilson(level)
@@ -113,6 +132,13 @@ class NemoHandler(object):
         return np.sort(recovered_ind)
 
     def cluster_detect(self, y_option=0):
+        """The core algorithm for NEMO detection. Record the indices of NEMOs corresponding to the input reflection data.
+        While x is fixed to d-spacing squared, choose y_option from 0 or 1 to determine what is to be used as y
+        (0: signal-to-noise ratio; 1: signal only).
+
+        :param y_option: 0 or 1 (0: signal-to-noise ratio; 1: signal only). Default value: 0.
+        :return:None
+        """
         y_option_ = self._detect_option[y_option]
 
         ac_outlier_flag, c_outlier_flag = self.outliers_by_wilson(0.5)
@@ -216,29 +242,60 @@ class NemoHandler(object):
         self._final_nemo_ind = final_weak_ind
 
     def get_nemo_indices(self):
+        """Return the row indices of NEMOs identified in the corresponding reflection data.
+
+        :return: Row indices of NEMOs.
+        :rtype: numpy.ndarray(dtype=int)
+        """
         assert self._final_nemo_ind is not None
         return self._work_obs.indices().as_vec3_double().as_numpy_array()[self._final_nemo_ind].astype(int)
 
     def get_nemo_D2(self):
+        """Return the inverse d-spacing squared of NEMOs identified in the corresponding reflection data.
+
+        :return: Inverse d-spacing squared of NEMOs.
+        :rtype: numpy.ndarray(dtype=float)
+        """
         assert self._final_nemo_ind is not None
         return 1./self._work_obs.d_spacings().data().as_numpy_array()[self._final_nemo_ind] ** 2
 
     def get_nemo_data(self):
+        """Return the amplitude/intensity value of NEMOs identified in the corresponding reflection data.
+
+        :return: Amplitude/Intensity value of NEMOs.
+        :rtype: numpy.ndarray(dtype=float)
+        """
         assert self._final_nemo_ind is not None
         return self._work_obs.data().as_numpy_array()[self._final_nemo_ind]
 
     def get_nemo_sig(self):
+        """Return the sigmas of NEMOs identified in the corresponding reflection data.
+
+        :return: Sigmas of NEMOs.
+        :rtype: numpy.ndarray(dtype=float)
+        """
         assert self._final_nemo_ind is not None
         return self._work_obs.sigmas().as_numpy_array()[self._final_nemo_ind]
 
     def get_nemo_data_over_sig(self):
+        """Return the signal-to-noise ratio of NEMOs identified in the corresponding data.
+
+        :return: Signal-to-noise ratio of NEMOs.
+        :rtype: numpy.ndarray(dtype=float)
+        """
         assert self._final_nemo_ind is not None
         return self._work_obs.data().as_numpy_array()[self._final_nemo_ind] / self._work_obs.sigmas().as_numpy_array()[self._final_nemo_ind]
 
     def add_false_sigma_record_back(self, return_idx=False):
-        # miller array automatically remove invalid observations with 0 or negative sigma.
-        # for any operation on the original record, the row number of the original records is needed
-        # following code calculate the row number before removing invalid observations
+        """Recover the original row number by adding back the invalid rows removed by miller_array.
+        cctbx miller array automatically remove invalid observations with 0 or negative sigma. For any operation on the
+        original record, the row number of the original records is needed. This function calculates the corresponding
+        row number of NEMOs before the removal of invalid observations.
+
+        :param return_idx: If True, return the original row indices of NEMOs.
+        :return: Original row indices of NEMOs.
+        :rtype: numpy.ndarray(dtype=int)
+        """
         if self._work_obs.is_xray_amplitude_array():
             ind_false_sigma = np.argwhere(self._refl_data.sigF <= 0.).flatten()
         if self._work_obs.is_xray_intensity_array():
@@ -253,6 +310,12 @@ class NemoHandler(object):
         return np.arange(0, self._reso_select), np.isin(self._sorted_arg[:self._reso_select], self._final_nemo_ind).astype(int)
 
     def weak_by_signal_to_noise(self, level=6.):
+        """Return the indices of weak observations with high errors.
+
+        :param level: The threshold of signal-to-noise level. Default: 6.
+        :return: Indices of weak observations with high high errors.
+        :rtype: numpy.ndarray(dtype=int)
+        """
         if self._work_obs.is_xray_amplitude_array():
             ind_weak = np.argwhere((self._refl_data.F / self._refl_data.sigF <= level)
                                    & (self._refl_data.resolution > 10.)).flatten()
@@ -262,12 +325,21 @@ class NemoHandler(object):
         return ind_weak
 
     def NEMO_removal(self, filename):
+        """Remove NEMOs from the given dataset and write into a new one. Current supported format: mtz
+
+        :param filename: The output path or file name.
+        """
         assert self._original_row_ind is not None
         isel = flex.size_t(self._original_row_ind)
         self._refl_data._obj.delete_reflections(isel)
         self._refl_data._obj.write(filename)
 
     def write_filter_hkl(self, integrate_hkl_plain, hkl_array):
+        """Generate FILTER.HKL for XDS. FILTER.HKL will be written to pwd.
+
+        :param integrate_hkl_plain: An IntegrateHKLPlain instance.
+        :param hkl_array: Nx3 array of hkl indices.
+        """
         row_exclude = []
         for hkl in hkl_array:
             equiv_rows = integrate_hkl_plain.find_equiv_refl(*hkl)
@@ -284,19 +356,34 @@ class NemoHandler(object):
             f.writelines(lines)
 
 def cumprob_c_amplitude(e):
-    # probability of normalised centric amplitude smaller than e, given read e and sigma sig.
-    # READ Acta. Cryst. (1999). D55, 1759-1764
+    """Calculate the probability of normalised centric amplitude smaller than a value.
+    Ref: READ Acta. Cryst. (1999). D55, 1759-1764
+
+    :param e: The normalised centric amplitude value.
+    :return: Probability of normalised centric amplitude smaller than e.
+    """
     return 1. - erfc(e / 1.4142)
 
 
 def cumprob_ac_amplitude(e):
-    # probability of normalised acentric amplitude smaller than e, given read e and sigma sig.
-    # READ Acta. Cryst. (1999). D55, 1759-1764
+    """Calculate the probability of normalised acentric amplitude smaller than a value.
+    Ref: READ Acta. Cryst. (1999). D55, 1759-1764
+
+    :param e: The normalised acentric amplitude value.
+    :return: Probability of normalised acentric amplitude smaller than e.
+    """
     return 1 - np.exp(-e*e)
 
 
 def cumprob_ac_intensity(e_square, sig):
-    # probability of normalised acentric intensity smaller than e**2, given read e**2 and sigma sig.
+    """Calculate the probability of normalised acentric intensity smaller than a value with a given sigma.
+    Ref: READ Acta. Cryst. (2016). D72, 375-387
+
+    :param e_square: The normalised acentric intensity value.
+    :param sig: The normalised acentric intensity sigma value.
+    :return: Probability of normalised acentric intensity smaller than e_square with given sigma value sig.
+    """
+    #
     # READ Acta. Cryst. (2016). D72, 375-387
     return 0.5 * (erfc(-e_square / 1.4142 / sig) - np.exp((sig - 2 * e_square) / 2) * erfc((sig - e_square) / 1.4142 / sig))
 
@@ -332,9 +419,14 @@ def cumprob_ac_intensity(e_square, sig):
 
 @np.vectorize
 def cumprob_c_intensity(e_square, sig):
-    # probability of centric normalised intensity smaller than e**2, given read e**2 and sigma sig.
-    # READ Acta. Cryst. (2016). D72, 375-387
-    # based on low level c, faster
+    """Calculate the probability of normalised acentric intensity smaller than a value with a given sigma.
+    Ref: READ Acta. Cryst. (2016). D72, 375-387
+
+    :param e_square: The normalised centric intensity value.
+    :param sig: he normalised centric intensity sigma value.
+    :return:  Probability of normalised centric intensity smaller than e_square with given sigma value sig.
+    """
+    # based on low level c for better speed
     c = ctypes.c_double(sig)
     user_data = ctypes.cast(ctypes.pointer(c), ctypes.c_void_p)
     prob_c_intensity_integrand = LowLevelCallable(lib.f, user_data)
