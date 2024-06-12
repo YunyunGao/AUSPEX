@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.11.6
+  - pip
   # - boost=1.74
   - cctbx
   - dials
@@ -14,3 +15,5 @@ dependencies:
   - msgpack-python
   - tensorflow
   - tabulate
+  - pip:
+      - nptyping[complete]

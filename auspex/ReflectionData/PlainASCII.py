@@ -4,6 +4,9 @@ from .ReflectionBase import *
 
 
 class IntegrateHKLPlain(ReflectionParser):
+    """Parser for XDS INTEGRATE.HKL..
+
+    """
     def __init__(self):
         super(IntegrateHKLPlain, self).__init__()
         self._data_dict = None
@@ -14,6 +17,11 @@ class IntegrateHKLPlain(ReflectionParser):
         self._hkl_view = None
 
     def read_hkl(self, filename):
+        """INTEGRATE.HKL reader.
+
+        :param filename: Filename or path to INTEGRATE.HKL.
+        :return: None.
+        """
         data = {
             "H": [],  # 0
             "K": [],  # 1
@@ -58,6 +66,14 @@ class IntegrateHKLPlain(ReflectionParser):
         self._sigI = np.array(data['SIGMA'])
 
     def find_equiv_refl(self, h, k, l):
+        """Find the equivalent reflections for the given h, k, l
+
+        :param h: Miller index H
+        :param k: Miller index K
+        :param l: Miller index L
+        :return:
+        :rtype: Nx3 numpy.ndarray(dtype=int)
+        """
         bool_pos = np.full(self.size, False)
         sym_operator = miller.sym_equiv_indices(self._space_group, [int(h), int(k), int(l)])
         for miller_idx in sym_operator.indices():

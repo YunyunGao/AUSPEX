@@ -1,4 +1,5 @@
 import copy
+from typing import Optional
 import warnings
 
 import numpy as np
@@ -15,6 +16,8 @@ from mmtbx.scaling import absolute_scaling
 
 import matplotlib.pyplot as plt
 
+from ReflectionData import Mtz, PlainASCII
+
 # initiate c lib for complex integral
 lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'lib/int_lib.so'))
 lib.f.restype = ctypes.c_double
@@ -22,7 +25,7 @@ lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p
 
 
 class NemoHandler(object):
-    def __init__(self, reso_min=10.):
+    def __init__(self, reso_min: float = 10.):
         """Constructor class for automatic NEMO detection. Default hyperparameters t,l,m1,m2,m3 (t_i, l_i, for intensities)
         are trained on the reflection data.
 
@@ -50,7 +53,7 @@ class NemoHandler(object):
         self._m2 = 0.598  # recurrence rate between 30-20 Angstrom, trained 0.598. not important for F, important for I
         self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, trained 0.787. neither important for F nor I
 
-    def refl_data_prepare(self, reflection_data, observation_label='FP'):
+    def refl_data_prepare(self, reflection_data: Mtz.MtzParser, observation_label: str = 'FP'):
         """Construct the initial set A. Conduct kernal normalization. The centric reflections and acentric reflections
 
         :param reflection_data: One of the supported ReflectionData instance.
@@ -80,12 +83,13 @@ class NemoHandler(object):
         self._centric_ind_low = self._sorted_arg[:self._reso_select][self._centric_flag]
         self._acentric_ind_low = self._sorted_arg[:self._reso_select][self._acentric_flag]
 
-    def outliers_by_wilson(self, prob_level=0.01):
+    def outliers_by_wilson(self, prob_level: float = 0.01) -> tuple[np.ndarray[np.bool_], np.ndarray[np.bool_]]:
         """Find outliers by Wilson statistics. Calculate the probability of a reflection smaller than a certain value
         to be observed according to Wilson statistics. Return those with probability smaller than prob_level.
 
         :param prob_level: The probability threshold to be applied. Default value 0.01.
-        :return: tuple [outlier flags for acentric reflections, outlier flags for centric reflections]
+        :return: [outlier flags for acentric reflections, outlier flags for centric reflections]
+        :rtype: tuple of two ndarrays
         """
         ac_obs = self._work_norma_obs.data().as_numpy_array()[self._acentric_ind_low]
         c_obs = self._work_norma_obs.data().as_numpy_array()[self._centric_ind_low]
@@ -110,13 +114,13 @@ class NemoHandler(object):
             raise Exception("Unknown observation type: {}".format(self._work_norma_obs.observation_type()))
         return ac_outlier_flag, c_outlier_flag
 
-    def mmtbx_beamstop_outlier(self, level=0.01):
+    def mmtbx_beamstop_outlier(self, level: float = 0.01) -> np.ndarray[np.int16]:
         """Return the row indices of beamstop outliers identified according to the probability threshold set by
         mmtbx.scale.outlier_rejection.
 
         :param level: Default probability threshold set by mmtbx.scale.outlier_rejection: 0.01.
         :return: Row indices of the identified outliers.
-        :rtype: numpy.ndarray(dtype=int)
+        :rtype: Nx1 ndarray(dtype=int)
         """
         if self._work_norma_obs.is_xray_amplitude_array():
         # the default level for beamstop outliers in mmtbx.scaling::outlier_rejection is set to 0.01
@@ -131,7 +135,7 @@ class NemoHandler(object):
         recovered_ind = ind_weak + in_add
         return np.sort(recovered_ind)
 
-    def cluster_detect(self, y_option=0):
+    def cluster_detect(self, y_option:  0 | 1 = 0):
         """The core algorithm for NEMO detection. Record the indices of NEMOs corresponding to the input reflection data.
         While x is fixed to d-spacing squared, choose y_option from 0 or 1 to determine what is to be used as y
         (0: signal-to-noise ratio; 1: signal only).
@@ -241,52 +245,52 @@ class NemoHandler(object):
 
         self._final_nemo_ind = final_weak_ind
 
-    def get_nemo_indices(self):
+    def get_nemo_indices(self) -> np.ndarray[np.int16]:
         """Return the row indices of NEMOs identified in the corresponding reflection data.
 
         :return: Row indices of NEMOs.
-        :rtype: numpy.ndarray(dtype=int)
+        :rtype: Nx3 numpy.ndarray(dtype=int)
         """
         assert self._final_nemo_ind is not None
         return self._work_obs.indices().as_vec3_double().as_numpy_array()[self._final_nemo_ind].astype(int)
 
-    def get_nemo_D2(self):
+    def get_nemo_D2(self) -> np.ndarray[np.float32]:
         """Return the inverse d-spacing squared of NEMOs identified in the corresponding reflection data.
 
         :return: Inverse d-spacing squared of NEMOs.
-        :rtype: numpy.ndarray(dtype=float)
+        :rtype: Nx1 numpy.ndarray(dtype=float)
         """
         assert self._final_nemo_ind is not None
         return 1./self._work_obs.d_spacings().data().as_numpy_array()[self._final_nemo_ind] ** 2
 
-    def get_nemo_data(self):
+    def get_nemo_data(self) -> np.ndarray["N", np.float32]:
         """Return the amplitude/intensity value of NEMOs identified in the corresponding reflection data.
 
         :return: Amplitude/Intensity value of NEMOs.
-        :rtype: numpy.ndarray(dtype=float)
+        :rtype: Nx1 numpy.ndarray(dtype=float)
         """
         assert self._final_nemo_ind is not None
         return self._work_obs.data().as_numpy_array()[self._final_nemo_ind]
 
-    def get_nemo_sig(self):
+    def get_nemo_sig(self) -> np.ndarray[np.float32]:
         """Return the sigmas of NEMOs identified in the corresponding reflection data.
 
         :return: Sigmas of NEMOs.
-        :rtype: numpy.ndarray(dtype=float)
+        :rtype: Nx1 numpy.ndarray(dtype=float)
         """
         assert self._final_nemo_ind is not None
         return self._work_obs.sigmas().as_numpy_array()[self._final_nemo_ind]
 
-    def get_nemo_data_over_sig(self):
+    def get_nemo_data_over_sig(self) -> np.ndarray[float]:
         """Return the signal-to-noise ratio of NEMOs identified in the corresponding data.
 
         :return: Signal-to-noise ratio of NEMOs.
-        :rtype: numpy.ndarray(dtype=float)
+        :rtype: Nx1 numpy.ndarray(dtype=float)
         """
         assert self._final_nemo_ind is not None
         return self._work_obs.data().as_numpy_array()[self._final_nemo_ind] / self._work_obs.sigmas().as_numpy_array()[self._final_nemo_ind]
 
-    def add_false_sigma_record_back(self, return_idx=False):
+    def add_false_sigma_record_back(self, return_idx: bool = False) -> Optional[np.ndarray[int]]:
         """Recover the original row number by adding back the invalid rows removed by miller_array.
         cctbx miller array automatically remove invalid observations with 0 or negative sigma. For any operation on the
         original record, the row number of the original records is needed. This function calculates the corresponding
@@ -294,7 +298,7 @@ class NemoHandler(object):
 
         :param return_idx: If True, return the original row indices of NEMOs.
         :return: Original row indices of NEMOs.
-        :rtype: numpy.ndarray(dtype=int)
+        :rtype: Nx1 numpy.ndarray(dtype=int)
         """
         if self._work_obs.is_xray_amplitude_array():
             ind_false_sigma = np.argwhere(self._refl_data.sigF <= 0.).flatten()
@@ -306,15 +310,15 @@ class NemoHandler(object):
         if return_idx is True:
             return self._original_row_ind
 
-    def ft_and_tar(self):
+    def ft_and_tar(self) -> tuple[np.ndarray, np.ndarray]:
         return np.arange(0, self._reso_select), np.isin(self._sorted_arg[:self._reso_select], self._final_nemo_ind).astype(int)
 
-    def weak_by_signal_to_noise(self, level=6.):
+    def weak_by_signal_to_noise(self, level: float = 6.) -> np.ndarray[bool]:
         """Return the indices of weak observations with high errors.
 
         :param level: The threshold of signal-to-noise level. Default: 6.
-        :return: Indices of weak observations with high high errors.
-        :rtype: numpy.ndarray(dtype=int)
+        :return: Indices of weak observations with high errors.
+        :rtype: Nx1 numpy.ndarray(dtype=int)
         """
         if self._work_obs.is_xray_amplitude_array():
             ind_weak = np.argwhere((self._refl_data.F / self._refl_data.sigF <= level)
@@ -324,7 +328,7 @@ class NemoHandler(object):
                                    & (self._refl_data.resolution > 10.)).flatten()
         return ind_weak
 
-    def NEMO_removal(self, filename):
+    def NEMO_removal(self, filename: str):
         """Remove NEMOs from the given dataset and write into a new one. Current supported format: mtz
 
         :param filename: The output path or file name.
@@ -334,7 +338,7 @@ class NemoHandler(object):
         self._refl_data._obj.delete_reflections(isel)
         self._refl_data._obj.write(filename)
 
-    def write_filter_hkl(self, integrate_hkl_plain, hkl_array):
+    def write_filter_hkl(self, integrate_hkl_plain: PlainASCII.IntegrateHKLPlain, hkl_array: np.ndarray):
         """Generate FILTER.HKL for XDS. FILTER.HKL will be written to pwd.
 
         :param integrate_hkl_plain: An IntegrateHKLPlain instance.
