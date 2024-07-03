@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 from iotbx import mtz
 
 from .ReflectionBase import *
@@ -15,7 +16,7 @@ class MtzParser(ReflectionParser):
         self._Fobs_refmac = None
         self._Fcalc_refmac = None
 
-    def read(self, filename):
+    def read(self, filename: str = None):
         """Read the given mtz file
 
         :param filename: File name or path to the file
@@ -97,7 +98,7 @@ class MtzParser(ReflectionParser):
         self._resolution = np.array(self._obj.crystals()[0].unit_cell().d(self._obj.extract_miller_indices()))
         self._filename = filename
 
-    def _batch_exits(self):
+    def _batch_exits(self) -> bool:
         """
         :return: Check whether the batch data exists.
         :rtype: bool
@@ -112,7 +113,7 @@ class MtzParser(ReflectionParser):
         pass
 
     @staticmethod
-    def column_exits(cidx):
+    def column_exits(cidx) -> bool:
         """
         :return: Check the existence of a column of the certain data type.
         :rtype: bool
@@ -123,7 +124,7 @@ class MtzParser(ReflectionParser):
             return False
 
     @filename_check
-    def get_column_types(self):
+    def get_column_types(self) -> list[str, ...]:
         """
         :return: a list of column types
         :rtype: list
@@ -131,7 +132,7 @@ class MtzParser(ReflectionParser):
         return self._obj.column_types()
 
     @filename_check
-    def get_column_list(self):
+    def get_column_list(self) -> list[str, ...]:
         """
         :return: a list of column labels
         :rtype: list
@@ -139,7 +140,7 @@ class MtzParser(ReflectionParser):
         return self._obj.column_labels()
 
     @filename_check
-    def get_space_group(self):
+    def get_space_group(self) -> str:
         """
         :return: space group
         :rtype: str
@@ -147,7 +148,7 @@ class MtzParser(ReflectionParser):
         return str(self._obj.space_group().info())
 
     @filename_check
-    def get_max_resolution(self):
+    def get_max_resolution(self) -> float:
         """
         :return: Maximum resolution
         :rtype: float
@@ -155,7 +156,7 @@ class MtzParser(ReflectionParser):
         return self._obj.max_min_resolution()[1]
 
     @filename_check
-    def get_min_resolution(self):
+    def get_min_resolution(self) -> float:
         """
         :return: minimum resolution
         :rtype: float
@@ -163,7 +164,8 @@ class MtzParser(ReflectionParser):
         return self._obj.max_min_resolution()[0]
 
     @staticmethod
-    def sort_column_types(column_types_list, column_labels_list):
+    def sort_column_types(column_types_list: list[str, ...], column_labels_list: list[str, ...]) \
+            -> dict[str, NDArray[Literal["N"], np.int_]]:
         """
         :return: indices of columns containing corresponding data
         :rtype: dict

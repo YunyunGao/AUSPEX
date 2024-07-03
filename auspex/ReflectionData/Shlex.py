@@ -13,7 +13,9 @@ class ShlexParser(ReflectionParser):
         self.miller_set = None
         self.crystal_symmetry = None
 
-    def read(self, filename, unit_cell, space_group_number):
+    def read(self, filename: str,
+             unit_cell: list[float, float, float, float, float, float],
+             space_group_number: int):
         try:
             self._obj = reflection_file_reader.any_reflection_file(filename+'=intensities')
         except:
@@ -46,3 +48,4 @@ class ShlexParser(ReflectionParser):
         self._resolution_merged = np.array(merged_miller.unit_cell().d(merged_miller.indices()))
         self._multiplicity_merged = merged_miller.multiplicities().data().as_numpy_array()
         self._complete_set = merged_miller.complete_set()
+

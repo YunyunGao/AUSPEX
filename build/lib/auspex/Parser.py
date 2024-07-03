@@ -9,7 +9,9 @@ from IceRings import IceRing
 from NEMO import NemoHandler
 from ReflectionData.AutoReader import FileReader
 from ReflectionData.PlainASCII import IntegrateHKLPlain
-from Verbose import MergeStatistics
+from Verbose import MergeStatistics, suppress_warnings
+
+suppress_warnings()
 
 command_line = ' '.join(sys.argv[1:])
 
@@ -186,7 +188,7 @@ parser.add_argument(
 args = parser.parse_args()
 filename = args.hklin[0]
 output_directory = args.directory
-version = "2.0.0"
+version = "2.3.0"
 
 print("")
 print("            ######################################################## ")
@@ -239,10 +241,14 @@ if exists(filename):
             nemo_info_F = NemoHandler()
             nemo_info_F.refl_data_prepare(ice_info._reflection_data, 'FP')
             nemo_info_F.cluster_detect(0)
+        else:
+            nemo_info_F = None
         if ice_info.iobs is not None:
             nemo_info_I = NemoHandler()
             nemo_info_I.refl_data_prepare(ice_info._reflection_data, 'I')
             nemo_info_I.cluster_detect(0)
+        else:
+            nemo_info_I = None
 
         if args.nemo_removal:
             if reflection_data.source_data_format is not "mtz":

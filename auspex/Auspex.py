@@ -160,7 +160,7 @@ class IceFinder(object):
             self._has_ice_rings = True
         return self._ice_ring.ice_rings[self._bool_ranges_in_ice]
 
-    def quantitative_score(self):
+    def quantitative_score(self) -> NDArray[Literal["N"], np.float32]:
         """Quantitative score based on HELCARAXE
         :return: The scores for each potential ice range in a scale of 0 to 1.
         """
@@ -193,15 +193,15 @@ class IceFinder(object):
         return scores_in_ice_range
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         """
         :return: path to data file
-        :rtype: 1d ndarray
+        :rtype: str
         """
         return self._file_name
 
     @property
-    def ice_ring(self):
+    def ice_ring(self) -> IceRing:
         """
         :return: ice ring instance
         :rtype: IceRings.IceRing
@@ -209,7 +209,7 @@ class IceFinder(object):
         return self._ice_ring
 
     @property
-    def iobs(self):
+    def iobs(self) -> NDArray[Literal["N"], np.float32]:
         """
         :return: intensity data
         :rtype: ReflectionData.Observation
@@ -220,7 +220,7 @@ class IceFinder(object):
             return self._intensity_data
 
     @property
-    def fobs(self):
+    def fobs(self) -> NDArray[Literal["N"], np.float32]:
         """
         :return: amplitude data
         :rtype: ReflectionData.Observation
@@ -231,7 +231,7 @@ class IceFinder(object):
             return self._amplitude_data
 
     @property
-    def cnn_predicted_i(self):
+    def cnn_predicted_i(self) -> NDArray[Literal["N"], np.float32]:
         """
         :return: helcaraxe prediction based on intensity
         :rtype: 1d ndarray
@@ -239,7 +239,7 @@ class IceFinder(object):
         return self._cnn_predicted_i
 
     @property
-    def cnn_predicted_f(self):
+    def cnn_predicted_f(self) -> NDArray[Literal["N"], np.float32]:
         """
         :return: helcaraxe prediction based on amplitude
         :rtype: 1d ndarray
@@ -247,7 +247,7 @@ class IceFinder(object):
         return self._cnn_predicted_f
 
     @property
-    def helcaraxe_status(self):
+    def helcaraxe_status(self) -> bool:
         """
         :return: True is helcaraxe has succeeded
         :rtype: Bool
@@ -255,7 +255,7 @@ class IceFinder(object):
         return self._helcaraxe_status
 
     @property
-    def has_ice_rings(self):
+    def has_ice_rings(self) -> bool:
         """
         :return: True if data have ice rings
         :rtype: Bool

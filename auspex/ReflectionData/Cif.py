@@ -14,7 +14,7 @@ class CifParser(ReflectionParser):
         self._resolutionI = None
         self._resolutionI_ano = None
 
-    def read(self, filename=None):
+    def read(self, filename: str = None):
         """Read the given cif file.
 
         :param filename: File or path to file
@@ -51,7 +51,7 @@ class CifParser(ReflectionParser):
             self._filename = filename
 
     @filename_check
-    def get_space_group(self):
+    def get_space_group(self) -> str:
         """
         :return: Space group text.
         :rtype: str
@@ -59,7 +59,7 @@ class CifParser(ReflectionParser):
         return str(self._space_group.info())
 
     @filename_check
-    def get_cell_dimension(self):
+    def get_cell_dimension(self) -> list[float, float, float, float, float, float]:
         """
         :return: Unit cell parameters (a, b, c, alpha, beta, gamma).
         :rtype: list

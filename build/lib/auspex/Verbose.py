@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 from tabulate import tabulate, SEPARATING_LINE
 
@@ -68,3 +70,9 @@ class MergeStatistics(object):
         print("#" * row_len)
         print(table)
 
+
+def suppress_warnings():
+    warnings.filterwarnings("ignore", message="The integral is probably divergent, or slowly convergent.")
+    warnings.filterwarnings("ignore", message="divide by zero encountered in")
+    warnings.filterwarnings("ignore", message="invalid value encountered in cumprob_c_intensity")
+    warnings.filterwarnings("ignore", message="The occurrence of roundoff error is detected")

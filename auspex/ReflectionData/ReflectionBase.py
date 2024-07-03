@@ -1,4 +1,7 @@
 import numpy as np
+from typing import Literal, Any, Dict
+from numpy.typing import NDArray
+
 from collections import namedtuple
 
 from cctbx import miller

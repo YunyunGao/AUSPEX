@@ -3,7 +3,15 @@ from iotbx.cif import CifParserError
 from . import Cif, Mtz, Xds, Dials, Shlex
 
 
-def FileReader(file_name, file_type=None, *args):
+def FileReader(file_name: str, file_type: str = None, *args):
+    """A universal format parser to popular data formats.
+
+    :param file_name: The name or path of the input file.
+    :param file_type: Optional.
+
+    :param args: (unit cell, space group number). Needed only when the input file does not include cell information.
+    :return: Parsed reflection data.
+    """
     if file_name[-3:] == 'mtz' or (file_type in ('xds', 'mtz', 'MTZ', 'mrg', 'binary')):
         try:
             reflection_data = Mtz.MtzParser()

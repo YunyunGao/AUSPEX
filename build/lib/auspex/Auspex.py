@@ -1,8 +1,15 @@
+from ReflectionData import Mtz, Dials, Cif, Xds
+
 from BinnedData import BinnedSummaries
 from IceRings import IceRing
+
 from Helcaraxe import cnn_predict
+
 import numpy as np
 import copy
+
+from typing import Literal
+from numpy.typing import NDArray
 
 
 class IceFinder(object):
@@ -16,9 +23,9 @@ class IceFinder(object):
     :type use_anom_if_present: bool
     """
     def __init__(self,
-                 reflection_data=None,
-                 ice_ring=None,
-                 use_anom_if_present=True):
+                 reflection_data: Mtz.MtzParser | Dials.DialsParser | Cif.CifParser | Xds.XdsParser = None,
+                 ice_ring: IceRing = None,
+                 use_anom_if_present: bool = True):
         """
         Constructor method.
         """
@@ -41,8 +48,8 @@ class IceFinder(object):
         self._has_ice_rings = False
 
     def binning(self,
-                obs_type='F',
-                binning=0.001):
+                obs_type: str = 'F',
+                binning: float = 0.001):
         """Construct a binned dataset.
 
         :param obs_type: observation type to be used, can be 'F' or 'I', default to 'F'
@@ -64,17 +71,17 @@ class IceFinder(object):
         self._binned_summaries.set_binning_rules(binning)
         self._binned_summaries.bins_in_icering(self._ice_ring)
 
-    def is_in_ice_ring(self):
+    def is_in_ice_ring(self) -> NDArray[Literal["N"], np.int16]:
         """
         :return: list of boolean values representing whether a bin is within the range of ice ring
-        :rtype: 1d ndarray
+        :rtype: Nx1 ndarray(dtype=int)
         """
         return self._binned_summaries.bin_args_in_icering(self._ice_ring)
 
-    def icefinder_scores(self):
-        """
+    def icefinder_scores(self) -> NDArray[Literal["N"], np.float32]:
+        """Calculate icefinder scores for all bins.
         :return: icefinder scores of all bins
-        :rtype: 1d ndarray
+        :rtype: Nx1 ndarray(dtype=int)
         """
         if self._icefinder_scores is None:
             self._binned_summaries.get_est_stdmeans()
@@ -84,9 +91,8 @@ class IceFinder(object):
         return self._icefinder_scores
 
     def run_helcaraxe(self):
-        """
-        :return: helcaraxe prediction based on intensity and amplitude
-        :rtype: (1d ndarray, 1d ndarray)
+        """Run HELCARAXE prediction based on intensity and/or amplitude.
+        :return: None
         """
         if (self._amplitude_ano_data is not None) and self._use_anom_if_present:
             fres, fobs = self._amplitude_ano_data.ires, self._amplitude_ano_data.obs
@@ -110,18 +116,18 @@ class IceFinder(object):
         if (self._cnn_predicted_i is not None) or (self._cnn_predicted_f is not None):
             self._helcaraxe_status = True
 
-    def mean_ires_squared(self):
-        """
-        :return: mean inverse resotluion squares of all bins
-        :rtype: 1d ndarray
+    def mean_ires_squared(self) -> NDArray[Literal["N"], np.float32]:
+        """Return the mean d-spacing squared for all bins.
+        :return: mean d-spacing squared (inverse resolution squared) of all bins
+        :rtype: Nx1 ndarray(dtype=float)
         """
         return self._binned_summaries.mean_invresolsq_all()
 
-    def ice_range_by_icefinderscore(self, cutoff=5.):
-        """
-        :param cutoff: the threshold for peak identification in icefinder_score, default: 5.0
-        :return: lower and upper resolutions in inverse squared angstrom where ice rings are potentially present
-                 based on icefinderscore
+    def ice_range_by_icefinderscore(self, cutoff: float = 5.) -> NDArray[Literal["N", 2], np.float32]:
+        """Calculate the ice ring range based on icefinder scores. Return the lower and upper bounds.
+        :param cutoff: Threshold for peak identification in icefinder_score. Default: 5.0.
+        :return: Lower and upper d-spacing squared where ice rings are potentially present
+                 based on icefinderscore.
         :rtype: Nx2 ndarray
         """
         with np.errstate(invalid='ignore'):
@@ -136,10 +142,10 @@ class IceFinder(object):
             self._has_ice_rings = True
         return self._ice_ring.ice_rings[self._bool_ranges_in_ice]
 
-    def ice_range_by_helcaraxe(self, cutoff=.02):
+    def ice_range_by_helcaraxe(self, cutoff: float = .02) -> NDArray[Literal["N", 2], np.float32]:
         """
         :return: lower and upper resolutions in inverse squared angstrom where ice rings are potentially present
-                based on helcaraxe prediction
+                based on HELCARAXE prediction
         :rtype: Nx2 ndarray
         """
         if (self._cnn_predicted_f is not None) and (self._cnn_predicted_i is None):
@@ -155,7 +161,7 @@ class IceFinder(object):
         return self._ice_ring.ice_rings[self._bool_ranges_in_ice]
 
     def quantitative_score(self):
-        """
+        """Quantitative score based on HELCARAXE
         :return: The scores for each potential ice range in a scale of 0 to 1.
         """
         if (self._cnn_predicted_f is not None) and (self._cnn_predicted_i is None):  # Helcaraxe F

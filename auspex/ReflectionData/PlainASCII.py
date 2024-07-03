@@ -1,3 +1,4 @@
+import numpy as np
 from cctbx import sgtbx
 
 from .ReflectionBase import *
@@ -16,7 +17,7 @@ class IntegrateHKLPlain(ReflectionParser):
         self._corr_peak = None
         self._hkl_view = None
 
-    def read_hkl(self, filename):
+    def read_hkl(self, filename: str):
         """INTEGRATE.HKL reader.
 
         :param filename: Filename or path to INTEGRATE.HKL.
@@ -65,7 +66,7 @@ class IntegrateHKLPlain(ReflectionParser):
         self._I = np.array(data['IOBS'])
         self._sigI = np.array(data['SIGMA'])
 
-    def find_equiv_refl(self, h, k, l):
+    def find_equiv_refl(self, h: int, k: int, l: int) -> NDArray[Literal["N"], np.bool_]:
         """Find the equivalent reflections for the given h, k, l
 
         :param h: Miller index H

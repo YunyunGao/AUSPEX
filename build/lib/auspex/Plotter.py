@@ -623,7 +623,7 @@ class PlotGenerator(object):
                 self.generate_SigI_plot(iobs, isigma, reso_data, ax=ax2)
                 self.generate_ISigI_plot(iobs, isigma, reso_data, ax=ax3)
 
-                #plot nemo
+                #  plot nemo
                 if nemo_handle_I is not None:
                     generate_nemo_plot(ax1, nemo_handle_I, 'I')
                     generate_nemo_plot(ax2, nemo_handle_I, 'sigI')
@@ -702,15 +702,29 @@ class PlotGenerator(object):
                 plt.savefig(filename, dpi=self._dpi, bbox_inches='tight')
                 plt.clf()
 
-
             if not self._no_individual_figures:
-                ax1 = None
-                ax2 = None
-                ax3 = None
-                # Generate amplitude plots
+                fig1, ax1 = plt.subplots(1, 1, subplot_kw={'projection': 'scatter_density'},
+                                         figsize=(self._plotwidth, np.sqrt(2)/3 * self._plotwidth))
+                fig2, ax2 = plt.subplots(1, 1, subplot_kw={'projection': 'scatter_density'},
+                                         figsize=(self._plotwidth, np.sqrt(2)/3 * self._plotwidth))
+                fig3, ax3 = plt.subplots(1, 1, subplot_kw={'projection': 'scatter_density'},
+                                         figsize=(self._plotwidth, np.sqrt(2)/3 * self._plotwidth))
+                # Generate intensity plots
                 self.generate_F_plot(fobs, fsigma, reso_data, ax=ax1)
                 self.generate_SigF_plot(fobs, fsigma, reso_data, ax=ax2)
                 self.generate_FSigF_plot(fobs, fsigma, reso_data, ax=ax3)
+
+                #plot nemo
+                if nemo_handle_F is not None:
+                    generate_nemo_plot(ax1, nemo_handle_F, 'F')
+                    generate_nemo_plot(ax2, nemo_handle_F, 'sigF')
+                    generate_nemo_plot(ax3, nemo_handle_F, 'F_over_sigF')
+
+                plt.tight_layout()
+                fig1.savefig(os.path.join(self.output_directory, "F_plot.png"), dpi=self._dpi, bbox_inches='tight')
+                fig2.savefig(os.path.join(self.output_directory, "SigF_plot.png"), dpi=self._dpi, bbox_inches='tight')
+                fig3.savefig(os.path.join(self.output_directory, "FOverSigF_plot.png"), dpi=self._dpi, bbox_inches='tight')
+                plt.clf()
 
         if b_data is not None and b_data.size() > 0:
             print('Set of plots is generated with {0} backgrounds.'.format(b_data.size()))

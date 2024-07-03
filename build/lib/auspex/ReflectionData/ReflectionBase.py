@@ -397,3 +397,4 @@ def unique_redundancies(miller_array):
     redund = miller.merge_equivalents(
         miller_array.map_to_asu()).redundancies().data().as_numpy_array()
     return np.unique(redund)
+
