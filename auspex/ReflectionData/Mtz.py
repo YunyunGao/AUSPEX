@@ -165,7 +165,7 @@ class MtzParser(ReflectionParser):
 
     @staticmethod
     def sort_column_types(column_types_list: list[str, ...], column_labels_list: list[str, ...]) \
-            -> dict[str, NDArray[Literal["N"], np.int_]]:
+            -> Dict[str, np.ndarray[Literal["N"], np.int_]]:
         """
         :return: indices of columns containing corresponding data
         :rtype: dict

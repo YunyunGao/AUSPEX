@@ -59,7 +59,7 @@ class XdsParser(ReflectionParser):
         self._multiplicity_merged = merged_miller.multiplicities().data().as_numpy_array()
         self._complete_set = merged_miller.complete_set()
 
-    def unique_redundancies(self) -> NDArray[Literal["N"], int]:
+    def unique_redundancies(self) -> np.ndarray[Literal["N"], int]:
         """Get redundancy of each reflection in merged data.
 
         :return: array of redundancy
@@ -207,9 +207,9 @@ class XdsParser(ReflectionParser):
         #return indices_container, obs_container, resolution_container
 
     def merge_stats_cmpt(self) \
-            -> tuple[NDArray[Literal["N"], np.float32], NDArray[Literal["N"], np.float32],
-                     NDArray[Literal["N"], np.float32], NDArray[Literal["N"], np.float32],
-                     NDArray[Literal["N"], np.float32], NDArray[Literal["N"], np.float32]]:
+            -> tuple[np.ndarray[Literal["N"], np.float32], np.ndarray[Literal["N"], np.float32],
+                     np.ndarray[Literal["N"], np.float32], np.ndarray[Literal["N"], np.float32],
+                     np.ndarray[Literal["N"], np.float32], np.ndarray[Literal["N"], np.float32]]:
         _obs = self.intensity_by_multiplicity
         _resolution = self.ires_by_multiplicity
         uni_redund = self.unique_redundancies()
@@ -402,7 +402,7 @@ class XdsParser(ReflectionParser):
         return merg_stats
 
     def cc_sig_y_square(self, num_of_bins: int = 21) \
-            -> tuple[NDArray[Literal["N"], np.float32], NDArray[Literal["N"], np.float32], NDArray[Literal["N"], np.float32]]:
+            -> tuple[np.ndarray[Literal["N"], np.float32], np.ndarray[Literal["N"], np.float32], np.ndarray[Literal["N"], np.float32]]:
         r_pim_cmpt, r_meas_cmpt, r_merge_cmpt, r_denominator, cc_sig_epsilon_cmpt, cc_x_i_bar_cmpt = self.merge_stats_cmpt()
         ires_unique = np.concatenate(self.ires_by_multiplicity)
 
@@ -441,11 +441,11 @@ class XdsParser(ReflectionParser):
         return ires_binned, cc_sig_y_square_binned, cc_sig_epsilon_square_binned
 
     def merge_stats_binned_deprecated(self, iresbinwidth: float = 0.01) \
-            -> tuple[NDArray[Literal["N"], np.float32],
-                     NDArray[Literal["N"], np.float32],
-                     NDArray[Literal["N"], np.float32],
-                     NDArray[Literal["N"], np.float32],
-                     NDArray[Literal["N"], np.float32]]:
+            -> tuple[np.ndarray[Literal["N"], np.float32],
+                     np.ndarray[Literal["N"], np.float32],
+                     np.ndarray[Literal["N"], np.float32],
+                     np.ndarray[Literal["N"], np.float32],
+                     np.ndarray[Literal["N"], np.float32]]:
         ires, r_pim_cmpt, r_meas_cmpt, r_merge_cmpt, r_denominator, cc_sig_epsilon_cmpt, cc_x_i_bar_cmpt = self.merge_stats_cmpt()
         binning = _get_bins_by_binwidth(ires, iresbinwidth)
         binned_args = _get_args_binned()
@@ -475,7 +475,7 @@ class XdsParser(ReflectionParser):
                 # cc_star_binned[bin_num] = np.sqrt((2 * cc_half_binned[bin_num]) / (1 + cc_half_binned[bin_num]))
         return ires_binned, r_pim_binned, r_merge_binned, r_meas_binned, cc_half_binned
 
-    def cal_completeness(self, unique_ires_array: NDArray[Literal["N"], np.float32],
+    def cal_completeness(self, unique_ires_array: np.ndarray[Literal["N"], np.float32],
                          d_min: float = None,
                          d_max: float = None) -> float:
         """Calculate the completeness between d_min and d_max.
@@ -531,7 +531,7 @@ class XdsParser(ReflectionParser):
         return self._obj.miller_set().resolution_range()[0]
 
     @filename_check
-    def get_merged_I(self) -> NDArray[Literal["N"], np.float32]:
+    def get_merged_I(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: merged intensity array
         :rtype: 1d ndarray
@@ -539,7 +539,7 @@ class XdsParser(ReflectionParser):
         return self._I_merged
 
     @filename_check
-    def get_merged_hkl(self) -> NDArray[Literal["N"], np.float32]:
+    def get_merged_hkl(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: merged intensity array
         :rtype: 1d ndarray
@@ -547,7 +547,7 @@ class XdsParser(ReflectionParser):
         return self._hkl_merged
 
     @filename_check
-    def get_merged_sig(self) -> NDArray[Literal["N"], np.float32]:
+    def get_merged_sig(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: merged intensity array
         :rtype: 1d ndarray
@@ -555,7 +555,7 @@ class XdsParser(ReflectionParser):
         return self._sigI_merged
 
     @filename_check
-    def get_merged_resolution(self) -> NDArray[Literal["N"], np.float32]:
+    def get_merged_resolution(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: resolution array of merged intensity
         :rtype: 1d ndarray
@@ -563,7 +563,7 @@ class XdsParser(ReflectionParser):
         return self._resolution_merged
 
     @filename_check
-    def get_zd(self) -> NDArray[Literal["N"], np.float32] | None:
+    def get_zd(self) -> np.ndarray[Literal["N"], np.float32] | None:
         """
         :return: reflection position array on z-axis
         :rtype: 1d ndarray
@@ -574,8 +574,8 @@ class XdsParser(ReflectionParser):
             return None
 
 
-def _get_bins_by_binwidth(ires: NDArray[Literal["N"], np.float32], bin_width: float) \
-        -> Dict[str, NDArray[Literal["N"], np.int_]]:
+def _get_bins_by_binwidth(ires: np.ndarray[Literal["N"], np.float32], bin_width: float) \
+        -> Dict[str, np.ndarray[Literal["N"], np.int_]]:
     all_bins = np.floor(1. / ires / bin_width)
     # find the unique bin values (uni_vals), the indices of unique values (inv_vals)
     # and the number of times each unique item appears (counts)
@@ -590,7 +590,7 @@ def _get_bins_by_binwidth(ires: NDArray[Literal["N"], np.float32], bin_width: fl
     return binning
 
 
-def _binning_idx_even(array_size: int, num_of_bins: int) -> NDArray[Literal["N", 2], np.int_]:
+def _binning_idx_even(array_size: int, num_of_bins: int) -> np.ndarray[Literal["N", 2], np.int_]:
     max_per_bin = array_size // num_of_bins
     min_per_bin = array_size // (num_of_bins+1)
     rng = np.random.default_rng(12345)
@@ -621,7 +621,7 @@ def _binning_idx_xprep(array_size: int, num_of_bins: int = 21):
 
 
 def _get_args_binned(ires_by_multiplicity: list, num_of_bins: int, method: str = 'xprep') \
-        -> list[NDArray[Literal["N"], np.float32]]:
+        -> list[np.ndarray[Literal["N"], np.float32]]:
     """
     :param ires_by_multiplicity: a list of resolution groupped by multiplicity
     :type ires_by_multiplicity: list
@@ -650,7 +650,7 @@ def _get_args_binned(ires_by_multiplicity: list, num_of_bins: int, method: str =
 
 
 def _get_args_by_range(ires_by_multiplicity: list, max_resolution: float, min_resolution: float) \
-        -> NDArray[Literal["N"], np.float32]:
+        -> np.ndarray[Literal["N"], np.float32]:
     ires_unique = np.concatenate(ires_by_multiplicity)
     args_in_range = (ires_unique >= max_resolution) & (ires_unique <= min_resolution)
     return args_in_range

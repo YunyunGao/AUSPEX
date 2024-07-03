@@ -173,11 +173,11 @@ class DialsParser(ReflectionParser):
                 xl.set_recalculated_unit_cell(uctbx.unit_cell(recalculated_unit_cell))
             self._crystals.append(xl)
 
-    def cal_resolution(self) -> NDArray[Literal["N"], np.float32]:
+    def cal_resolution(self) -> np.ndarray[Literal["N"], np.float32]:
         """Get resolutions.
 
         :return: resoltuion array
-        :rtype: Nx1 ndarray
+        :rtype: Nx1 np.ndarray
         """
         if not self._expt:
             raise RuntimeError('No experiment list file. Please load corresponding expt.')
@@ -189,7 +189,7 @@ class DialsParser(ReflectionParser):
                 self._resolution[i] = self._crystals[k].get_unit_cell().d(af_flex.miller_index(self._hkl[i].tolist()))
         return self._resolution
 
-    def as_miller_array(self, identifier_key: str, intensity: str = 'sum') -> miller.miller_array:
+    def as_miller_array(self, identifier_key: str, intensity: str = 'sum') -> miller.array:
         """Convert dials metadata to cctbx miller array.
 
         :param identifier_key: dials experiment identifier
@@ -216,14 +216,14 @@ class DialsParser(ReflectionParser):
         i_obs.set_info(miller.array_info(source='DIALS', source_type='reflection_tables'))
         return i_obs
 
-    def column_to_array(self, dict_key: str, d_type: str, reshape: bool = False) -> NDArray[Any, Any]:
+    def column_to_array(self, dict_key: str, d_type: str, reshape: bool = False) -> np.ndarray[Any, Any]:
         """A universal data dict reader.
 
         :param dict_key: Key used by dials.
         :param d_type: Data type of the chosen column.
         :param reshape: Optional. If True, reshape the data array to (N,3).
-        :return: Data of the chosen column as ndarray.
-        :rtype: ndarray
+        :return: Data of the chosen column as np.ndarray.
+        :rtype: np.ndarray
         """
         array = self.flex_func[d_type](self._obj[2]['data'][dict_key][1][1])
         array = array.as_numpy_array()
@@ -240,23 +240,23 @@ class DialsParser(ReflectionParser):
         """
         return self._type_reflection_table
 
-    def get_zd(self) -> NDArray[Literal["N"], np.float32]:
+    def get_zd(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: positions of observations on z-axis
-        :rtype: 1d ndarray
+        :rtype: 1d np.ndarray
         """
         return self._xyzobs_px[:, 2]
 
-    def get_background(self) -> NDArray[Literal["N"], np.float32]:
+    def get_background(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: background
-        :rtype: 1d ndarray
+        :rtype: 1d np.ndarray
         """
         return self._background
 
-    def get_background_var(self) -> NDArray[Literal["N"], np.float32]:
+    def get_background_var(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: variance of background
-        :rtype: 1d ndarray
+        :rtype: 1d np.ndarray
         """
         return self._background_sum_var

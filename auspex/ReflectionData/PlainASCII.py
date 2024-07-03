@@ -66,7 +66,7 @@ class IntegrateHKLPlain(ReflectionParser):
         self._I = np.array(data['IOBS'])
         self._sigI = np.array(data['SIGMA'])
 
-    def find_equiv_refl(self, h: int, k: int, l: int) -> NDArray[Literal["N"], np.bool_]:
+    def find_equiv_refl(self, h: int, k: int, l: int) -> np.ndarray[Literal["N"], np.bool_]:
         """Find the equivalent reflections for the given h, k, l
 
         :param h: Miller index H
