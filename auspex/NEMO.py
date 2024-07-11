@@ -54,7 +54,7 @@ class NemoHandler(object):
         self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, trained 0.787. neither important for F nor I
 
     def refl_data_prepare(self, reflection_data: Mtz.MtzParser, observation_label: str = 'FP'):
-        """Construct the initial set A. Conduct kernal normalization. The centric reflections and acentric reflections
+        """Construct the initial set A. Conduct kernel normalization. The centric reflections and acentric reflections
 
         :param reflection_data: One of the supported ReflectionData instance.
         :param observation_label: The label of the observation. Can be 'FP' ('F', 'FMEANS') or 'I' ('IMEANS', 'IMEAN').
@@ -329,7 +329,7 @@ class NemoHandler(object):
         return ind_weak
 
     def NEMO_removal(self, filename: str):
-        """Remove NEMOs from the given dataset and write into a new one. Current supported format: mtz
+        """Remove NEMOs from the given dataset and write into a new one. Current supported format: mtz.
 
         :param filename: The output path or file name.
         """
