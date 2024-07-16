@@ -49,9 +49,9 @@ class NemoHandler(object):
         self._t_i = 0.0565  # hyperparamter t for intensity: trained 0.0565
         self._l = 0.496  # hyperparameter l: intersection fraction, trained 0.496
         self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, trained 0.598
-        self._m1 = 0.100  # recurrence rate below 30 Angstrom, neither important for F nor I
-        self._m2 = 0.598  # recurrence rate between 30-20 Angstrom, trained 0.598. not important for F, important for I
-        self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, trained 0.787. neither important for F nor I
+        self._m1 = 0.100  # recurrence rate below 30 Angstrom, trained 0.100.
+        self._m2 = 0.598  # recurrence rate between 30-20 Angstrom, trained 0.598.
+        self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, trained 0.787.
 
     def refl_data_prepare(self, reflection_data: Mtz.MtzParser, observation_label: str = 'FP'):
         """Construct the initial set A. Conduct kernel normalization. The centric reflections and acentric reflections
