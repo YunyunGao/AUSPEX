@@ -179,7 +179,7 @@ class NemoHandler(object):
         auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1], 95) / auspex_array_for_fit[:, 0].max() * auspex_array[:, 0]
 
         ind_cluster_by_size = []
-        max_search_size = np.sum(weak_prob <= 0.01)  # setting maximum noise level
+        max_search_size = np.sum(weak_prob <= 0.01)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
         for num_points in range(max_search_size, 1, -1):
             detect = HDBSCAN(min_cluster_size=num_points)
                              #min_samples=ind_weak_work.size-num_points+1,
