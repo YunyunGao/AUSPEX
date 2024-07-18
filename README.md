@@ -61,3 +61,8 @@ cd docs
 make html
 your_favorite_browser build/auspex.html
 ```
+
+### WEBSPEX
+Hate to build?
+Visit our webservice [WEBSPEX](https://auspex.de)
+

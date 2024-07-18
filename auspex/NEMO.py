@@ -157,7 +157,7 @@ class NemoHandler(object):
         weak_prob = np.concatenate([self._prob_ac[ac_outlier_flag], self._prob_c[c_outlier_flag]])
 
         if ind_weak.size == 1:
-            # if only one outlier by wilson then we become conservative. level 0.02 -> 0.005
+            # if only one outlier by wilson then we become conservative. level -> 0.001
             conserv_ind_weak = ind_weak[ind_weak <= 1e-3]
             self._final_nemo_ind = conserv_ind_weak
             return conserv_ind_weak
@@ -215,7 +215,7 @@ class NemoHandler(object):
                 ind_cluster_by_size.append(np.unique(in_token))
 
         if not ind_cluster_by_size:
-            # when no cluster can be found we need to be very conservative thus level 0.02->0.005
+            # when no cluster can be found we need to be very conservative thus level -> 0.001
             conserv_ind_weak = ind_weak[weak_prob <= 1e-3]
             self._final_nemo_ind = conserv_ind_weak
             return conserv_ind_weak
