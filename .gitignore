@@ -10,3 +10,4 @@ test.py
 *.tar.gz
 mtz_with_ice_rings.txt
 /auspex/NEMO_ult_with_plot.py
+/build/
