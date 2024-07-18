@@ -1,4 +1,6 @@
 import numpy as np
+from typing import Literal, Any, Dict
+
 from collections import namedtuple
 
 from cctbx import miller
@@ -55,7 +57,7 @@ class Observation(object):
         self._ires = self._ires[valid_sigmas_idx]
 
     @property
-    def obs(self):
+    def obs(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: observations
         :rtype: 1d ndarray
@@ -63,7 +65,7 @@ class Observation(object):
         return self._obs
 
     @property
-    def sigma(self):
+    def sigma(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: deviations
         :rtype: 1d ndarray
@@ -71,14 +73,14 @@ class Observation(object):
         return self._sigma
 
     @property
-    def ires(self):
+    def ires(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: resolutions
         :rtype: 1d ndarray
         """
         return self._ires
 
-    def size(self):
+    def size(self) -> np.ndarray[Literal["N"], np.int_]:
         """
         :return: number of observations
         :rtype: int
@@ -86,7 +88,7 @@ class Observation(object):
         if self._obs.size == self._sigma.size and self._obs.size == self._ires.size:
             return self._obs.size
 
-    def invresolsq(self):
+    def invresolsq(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: inverse resolution squared
         :rtype: 1d ndarray
@@ -124,7 +126,7 @@ class ReflectionParser(object):
         self._space_group = None
 
     @property
-    def file_name(self):
+    def file_name(self) -> str:
         """
         :return: file or path to file
         :rtype: str
@@ -132,11 +134,11 @@ class ReflectionParser(object):
         return self._filename
 
     @property
-    def size(self):
+    def size(self) -> int:
         return self._resolution.size
 
     @property
-    def hkl(self):
+    def hkl(self) -> np.ndarray[Literal["N", 3], np.int_]:
         """
         :return: hkl indices
         :rtype: nx3 ndarray
@@ -144,7 +146,7 @@ class ReflectionParser(object):
         return self._hkl
 
     @property
-    def resolution(self):
+    def resolution(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: resolutions
         :rtype: 1d ndarray
@@ -156,7 +158,7 @@ class ReflectionParser(object):
             return self._resolution
 
     @property
-    def F(self):
+    def F(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: amplitude
         :rtype: 1d ndarray
@@ -164,7 +166,7 @@ class ReflectionParser(object):
         return self._F
 
     @property
-    def sigF(self):
+    def sigF(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: standard deviation of amplitude
         :rtype: 1d ndarray
@@ -172,7 +174,7 @@ class ReflectionParser(object):
         return self._sigF
 
     @property
-    def I(self):
+    def I(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: intensity
         :rtype: 1d ndarray
@@ -180,7 +182,7 @@ class ReflectionParser(object):
         return self._I
 
     @property
-    def sigI(self):
+    def sigI(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: standard deviation of intensity
         :rtype: 1d ndarray
@@ -188,7 +190,7 @@ class ReflectionParser(object):
         return self._sigI
 
     @property
-    def background(self):
+    def background(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: reflection background
         :rtype: 1d ndarray
@@ -196,7 +198,7 @@ class ReflectionParser(object):
         return self._background
 
     @property
-    def F_ano(self):
+    def F_ano(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: anomalous amplitude
         :rtype: 1d ndarray
@@ -204,7 +206,7 @@ class ReflectionParser(object):
         return self.F_ano
 
     @property
-    def sigF_ano(self):
+    def sigF_ano(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: standard deviation of anomalous amplitude
         :rtype: 1d ndarray
@@ -212,7 +214,7 @@ class ReflectionParser(object):
         return self.sigF_ano
 
     @property
-    def sigI_ano(self):
+    def sigI_ano(self) -> np.ndarray[Literal["N"], np.float32]:
         """
         :return: standard deviation of anomalous intensity
         :rtype: 1d ndarray
@@ -220,15 +222,15 @@ class ReflectionParser(object):
         return self.sigI_ano
 
     @property
-    def source_data_format(self):
+    def source_data_format(self) -> str:
         return self._source_data_format
 
     @source_data_format.setter
     def source_data_format(self, _):
         self._source_data_format = _
 
-    def observation(self, idx):
-        """Return all the not None observations at the given index, as a namedtuple.
+    def observation(self, idx) -> namedtuple:
+        """Return all not None observations at the given index, as a namedtuple.
 
         :return ObsTuple with fields of not None observations.
         :rtype: namedtuple

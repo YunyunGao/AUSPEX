@@ -10,7 +10,7 @@ class ScaParser(ReflectionParser):
     def __init__(self):
         super(ScaParser, self).__init__()
 
-    def read(self, filename):
+    def read(self, filename: str):
         """Read the given cif file.
 
         :param filename: File or path to file
