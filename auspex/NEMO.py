@@ -1,6 +1,5 @@
 import copy
 from typing import Optional
-import warnings
 
 import numpy as np
 
@@ -22,7 +21,6 @@ from ReflectionData import Mtz, PlainASCII
 lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'lib/int_lib.so'))
 lib.f.restype = ctypes.c_double
 lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p)
-
 
 class NemoHandler(object):
     def __init__(self, reso_min: float = 10.):
@@ -49,8 +47,8 @@ class NemoHandler(object):
         self._t_i = 0.0565  # hyperparamter t for intensity: trained 0.0565
         self._l = 0.496  # hyperparameter l: intersection fraction, trained 0.496
         self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, trained 0.598
-        self._m1 = 0.100  # recurrence rate below 30 Angstrom, trained 0.100.
-        self._m2 = 0.598  # recurrence rate between 30-20 Angstrom, trained 0.598.
+        self._m1 = 0.109  # recurrence rate below 30 Angstrom, trained 0.100.
+        self._m2 = 0.519  # recurrence rate between 30-20 Angstrom, trained 0.598.
         self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, trained 0.787.
 
     def refl_data_prepare(self, reflection_data: Mtz.MtzParser, observation_label: str = 'FP'):
@@ -164,7 +162,9 @@ class NemoHandler(object):
         # i = np.concatenate((d_ac_weak, d_c_weak))
         if y_option_ == 'obs_over_sig':
             # j = np.concatenate((ac_weak/sig_ac_weak, c_weak/sig_c_weak))
-            auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low / self._sig_low)).transpose()
+            auspex_array = np.vstack((1. / (self._reso_low ** 2),
+                                      np.divide(self._obs_low, self._sig_low, out=np.zeros_like(self._obs_low), where=self._sig_low != 0.))
+                                     ).transpose()
         if y_option_ == 'obs':
             # j = np.concatenate((ac_weak, c_weak))
             auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low)).transpose()
@@ -200,7 +200,7 @@ class NemoHandler(object):
                 in_token = np.empty(0, dtype=int)
                 in_prob = np.empty(0, dtype=float)
                 for c_label in unique_cluster_label:
-                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.48)).flatten()
+                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.41)).flatten()
                     if args_.size == 0:
                         continue
                     ind_sub_cluster = self._sorted_arg[:self._reso_select][args_]
@@ -389,7 +389,10 @@ def cumprob_ac_intensity(e_square, sig):
     """
     #
     # READ Acta. Cryst. (2016). D72, 375-387
-    return 0.5 * (erfc(-e_square / 1.4142 / sig) - np.exp((sig - 2 * e_square) / 2) * erfc((sig - e_square) / 1.4142 / sig))
+    e_square_div_sig = np.divide(e_square, sig, out=np.zeros_like(e_square), where=sig != 0.)
+    sig_minus_e_square_div_sig = np.divide(sig - e_square, sig, out=np.zeros_like(e_square), where=sig != 0.)
+    return 0.5 * (erfc(-e_square_div_sig / 1.4142) - np.exp((sig - 2 * e_square) / 2) * erfc(
+        sig_minus_e_square_div_sig / 1.4142))
 
 # def prob_c_intensity(e_square, sig):
 #     # probability Baysian denominator for centric intensity, given read e**2 and sigma sig.
@@ -431,7 +434,7 @@ def cumprob_c_intensity(e_square, sig):
     :return:  Probability of normalised centric intensity smaller than e_square with given sigma value sig.
     """
     # based on low level c for better speed
-    c = ctypes.c_double(sig)
+    c = ctypes.c_double(sig+1e-12)
     user_data = ctypes.cast(ctypes.pointer(c), ctypes.c_void_p)
     prob_c_intensity_integrand = LowLevelCallable(lib.f, user_data)
     return nquad(prob_c_intensity_integrand, [[0, np.inf], [-np.inf, e_square]], opts={"limit": 301})[0]
