@@ -4,12 +4,13 @@ import argparse
 from argparse import RawTextHelpFormatter
 from os.path import exists, basename, splitext
 from Plotter import PlotGenerator
+from auspex import __version__
 from Auspex import IceFinder
 from IceRings import IceRing
 from NEMO import NemoHandler
 from ReflectionData.AutoReader import FileReader
 from ReflectionData.PlainASCII import IntegrateHKLPlain
-from Verbose import MergeStatistics, suppress_warnings
+from Verbose import MergeStatistics, suppress_warnings, auspex_init
 
 suppress_warnings()
 
@@ -188,18 +189,8 @@ parser.add_argument(
 args = parser.parse_args()
 filename = args.hklin[0]
 output_directory = args.directory
-version = "2.3.0"
 
-print("")
-print("            ######################################################## ")
-print("           #                    _   _   _ ____  ____  _______  __   #")
-print("           #       A           / \ | | | / ___||  _ \| ____\ \/ /   #")
-print("           #   /MmmOmmM\      / _ \| | | \___ \| |_) |  _|  \  /    #")
-print("           #       #         / ___ \ |_| |___) |  __/| |___ /  \    #")
-print("           #      /#\       /_/   \_\___/|____/|_|   |_____/_/\_\   #")
-print("           #                                        {:>13s}   #".format("Version " + str(version)))
-print("            ######################################################## ")
-print("\nCOMMAND LINE: auspex {0}".format(command_line))
+auspex_init(__version__, command_line)
 
 if exists(filename):
     # Original line

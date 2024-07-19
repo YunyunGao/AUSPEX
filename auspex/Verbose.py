@@ -3,6 +3,8 @@ import warnings
 import numpy as np
 from tabulate import tabulate, SEPARATING_LINE
 
+from auspex import __version__
+
 
 class MergeStatistics(object):
     def __init__(self, merge_stats_binned, merge_stas_overall):
@@ -70,9 +72,26 @@ class MergeStatistics(object):
         print("#" * row_len)
         print(table)
 
+def auspex_init(version, command_line):
+    print("")
+    print("            ######################################################## ")
+    print("           #                    _   _   _ ____  ____  _______  __   #")
+    print("           #       A           / \ | | | / ___||  _ \| ____\ \/ /   #")
+    print("           #   /MmmOmmM\      / _ \| | | \___ \| |_) |  _|  \  /    #")
+    print("           #       #         / ___ \ |_| |___) |  __/| |___ /  \    #")
+    print("           #      /#\       /_/   \_\___/|____/|_|   |_____/_/\_\   #")
+    print("           #                                        {:>13s}   #".format("Version " + str(version)))
+    print("            ######################################################## ")
+    print("\nCOMMAND LINE: auspex {0}".format(command_line))
+
 
 def suppress_warnings():
     warnings.filterwarnings("ignore", message="The integral is probably divergent, or slowly convergent.")
     # warnings.filterwarnings("ignore", message="divide by zero encountered in")
     # warnings.filterwarnings("ignore", message="invalid value encountered in cumprob_c_intensity")
     # warnings.filterwarnings("ignore", message="The occurrence of roundoff error is detected")
+
+def generate_plot():
+    print("_______________________________________________________________________________\n")
+    print("                                GENERATING PLOTS:                              ")
+    print("        (Depending on the size of the data set, this may take a moment)        \n")

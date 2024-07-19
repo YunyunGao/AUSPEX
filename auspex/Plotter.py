@@ -3,6 +3,7 @@ from __future__ import division
 import os
 import matplotlib
 import mpl_scatter_density
+import Verbose
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
@@ -604,9 +605,7 @@ class PlotGenerator(object):
         i_data = icefinder_handle.iobs
         f_data = icefinder_handle.fobs
         b_data = icefinder_handle.background
-        print("_______________________________________________________________________________\n")
-        print("                                GENERATING PLOTS:                              ")
-        print("        (Depending on the size of the data set, this may take a moment)        \n")
+        Verbose.generate_plot()
 
         if i_data is not None and i_data.size() > 0:
             print('Set of plots is generated with {0} intensities.'.format(i_data.size()))

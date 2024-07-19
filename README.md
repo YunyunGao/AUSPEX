@@ -51,7 +51,7 @@ auspex -h
 
 ```
 auspex test/4puc.mtz
-auspex 5usx.mtz --nemo-removal --generate-xds-filter test/5usx.HKL
+auspex test/5usx.mtz --nemo-removal --generate-xds-filter test/5usx.HKL
 ```
 
 ### Documentation
