@@ -15,7 +15,7 @@ from mmtbx.scaling import absolute_scaling
 
 import matplotlib.pyplot as plt
 
-from ReflectionData import Mtz, PlainASCII
+from ReflectionData import Mtz, Xds, PlainASCII
 
 # initiate c lib for complex integral
 lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'lib/int_lib.so'))
@@ -43,15 +43,15 @@ class NemoHandler(object):
         self._final_nemo_ind = None
         self._original_row_ind = None
         self._detect_option = ['obs_over_sig', 'obs']
-        self._t = 0.0248  # hyperparamter t: french_wilson_level, trained 0.0248
-        self._t_i = 0.0565  # hyperparamter t for intensity: trained 0.0565
-        self._l = 0.496  # hyperparameter l: intersection fraction, trained 0.496
-        self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, trained 0.598
-        self._m1 = 0.109  # recurrence rate below 30 Angstrom, trained 0.100.
-        self._m2 = 0.519  # recurrence rate between 30-20 Angstrom, trained 0.598.
-        self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, trained 0.787.
+        self._t = 0.0248  # hyperparamter t: french_wilson_level, snr trained 0.0248
+        self._t_i = 0.0565  # hyperparamter t for intensity: snr trained 0.0565
+        self._l = 0.496  # hyperparameter l: intersection fraction, snr trained 0.496
+        self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, snr trained 0.598
+        self._m1 = 0.109  # recurrence rate below 30 Angstrom, snr trained 0.109.
+        self._m2 = 0.519  # recurrence rate between 30-20 Angstrom, snr trained 0.519.
+        self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, snr trained  0.787.
 
-    def refl_data_prepare(self, reflection_data: Mtz.MtzParser, observation_label: str = 'FP'):
+    def refl_data_prepare(self, reflection_data: Mtz.MtzParser | Xds.XdsParser, observation_label: str = 'FP'):
         """Construct the initial set A. Conduct kernel normalization. The centric reflections and acentric reflections
 
         :param reflection_data: One of the supported ReflectionData instance.
@@ -309,6 +309,20 @@ class NemoHandler(object):
         self._original_row_ind = self._final_nemo_ind + in_add
         if return_idx is True:
             return self._original_row_ind
+
+    def get_nemo_row_ind(self):
+        if self._final_nemo_ind is None:
+            self.cluster_detect(0)
+        if self._original_row_ind is None:
+            self.add_false_sigma_record_back()
+        if self._refl_data.source_data_format == 'xds_hkl':
+            hkl_array = self._refl_data.get_merged_hkl()[self._final_nemo_ind]
+            row_exclude = []
+            for hkl in hkl_array:
+                equiv_rows = self._refl_data.find_equiv_refl(*hkl)
+                row_exclude.append(equiv_rows)
+            self._original_row_ind = np.concatenate(row_exclude)
+        return self._original_row_ind
 
     def ft_and_tar(self) -> tuple[np.ndarray, np.ndarray]:
         return np.arange(0, self._reso_select), np.isin(self._sorted_arg[:self._reso_select], self._final_nemo_ind).astype(int)

@@ -51,6 +51,7 @@ auspex -h
 
 ```
 auspex test/4puc.mtz
+auspex test/8g0s.mtz --beamstop_outlier
 auspex test/5usx.mtz --nemo-removal --generate-xds-filter test/5usx.HKL
 ```
 

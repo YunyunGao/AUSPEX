@@ -206,9 +206,9 @@ if exists(filename):
     print(reflection_data.source_data_format)
     if reflection_data.source_data_format in ('xds_hkl', 'shlex_hkl'):
         #try:
-            reflection_data.group_by_redundancies()
-            merge_stats = MergeStatistics(reflection_data.merge_stats_binned(), reflection_data.merge_stats_overall())
-            merge_stats.print_stats_table()
+        reflection_data.group_by_redundancies()
+        merge_stats = MergeStatistics(reflection_data.merge_stats_binned(), reflection_data.merge_stats_overall())
+        merge_stats.print_stats_table()
         #except:
          #   pass
 
@@ -231,13 +231,15 @@ if exists(filename):
         if ice_info.fobs is not None:
             nemo_info_F = NemoHandler()
             nemo_info_F.refl_data_prepare(ice_info._reflection_data, 'FP')
-            nemo_info_F.cluster_detect(0)
+            #nemo_info_F.cluster_detect(0)
+            nemo_info_F.get_nemo_row_ind()
         else:
             nemo_info_F = None
         if ice_info.iobs is not None:
             nemo_info_I = NemoHandler()
             nemo_info_I.refl_data_prepare(ice_info._reflection_data, 'I')
-            nemo_info_I.cluster_detect(0)
+            #nemo_info_I.cluster_detect(0)
+            nemo_info_I.get_nemo_row_ind()
         else:
             nemo_info_I = None
 

@@ -41,6 +41,7 @@ class XdsParser(ReflectionParser):
         self._sigI = np.array(self._obj.sigma_iobs, dtype=float)
         # read hkl
         self._hkl = np.array(self._obj.miller_indices)
+        self._hkl_view = self._hkl.copy().view([('a', int), ('b', int), ('c', int)])
         self._resolution = np.array(self._obj.unit_cell.d(self._obj.miller_indices))
         if merge_equivalents is True:
             self._merge()
@@ -278,7 +279,7 @@ class XdsParser(ReflectionParser):
         sig_y_square = \
             1 / (cc_x_i_bar_cmpt.size - 1) * ((cc_x_i_bar_cmpt * cc_x_i_bar_cmpt).sum() - np.square(cc_x_i_bar_cmpt.sum()) / cc_x_i_bar_cmpt.size)
         cc_half = (sig_y_square - 0.5 * sig_epsilon_square) / (sig_y_square + 0.5 * sig_epsilon_square)
-        from ..BinnedData import BinnedStatistics
+        from auspex.BinnedData import BinnedStatistics
         merge_stats = BinnedStatistics().const_stats(ires_minmax, num_data, i_mean, i_over_sigma_mean, completeness_mean, redundancy_mean,
                                                      r_pim, r_merge, r_meas, cc_half)
         return merge_stats
@@ -357,7 +358,7 @@ class XdsParser(ReflectionParser):
         redundancy_binned = np.array(redundancy_binned)
         completeness_binned = np.array(completeness_binned)
         num_data_binned = np.array(num_data_binned)
-        from ..BinnedData import BinnedStatistics
+        from auspex.BinnedData import BinnedStatistics
         merg_stats = BinnedStatistics().const_stats(ires_binned, num_data_binned, i_mean_binned, i_over_sigma_binned, completeness_binned,
                                                     redundancy_binned, r_pim_binned, r_merge_binned, r_meas_binned, cc_half_binned)
         return merg_stats
@@ -396,7 +397,7 @@ class XdsParser(ReflectionParser):
         cc_half = (sig_y_square - 0.5 * sig_epsilon_square) / (sig_y_square + 0.5 * sig_epsilon_square)
         # cc_star_binned[bin_num] = np.sqrt((2 * cc_half_binned[bin_num]) / (1 + cc_half_binned[bin_num]))
 
-        from ..BinnedData import BinnedStatistics
+        from auspex.BinnedData import BinnedStatistics
         merg_stats = BinnedStatistics().const_stats(ires_mean, num_data, i_mean, i_over_sigma, completeness,
                                                     redundancy, r_pim, r_merge, r_meas, cc_half)
         return merg_stats
@@ -497,6 +498,22 @@ class XdsParser(ReflectionParser):
         unique_obs_num = sele_unique.sum()
         completeness = unique_obs_num / theory_obs_num
         return completeness
+
+    def find_equiv_refl(self, h: int, k: int, l: int):
+        """Find the equivalent reflections for the given h, k, l
+
+        :param h: Miller index H
+        :param k: Miller index K
+        :param l: Miller index L
+        :return:
+        :rtype: Nx3 numpy.ndarray(dtype=int)
+        """
+        bool_pos = np.full(self.size, False)
+        sym_operator = miller.sym_equiv_indices(self._space_group, [int(h), int(k), int(l)])
+        for miller_idx in sym_operator.indices():
+            search_view = np.array(miller_idx.h()).view([('a', int), ('b', int), ('c', int)])
+            bool_pos |= np.in1d(self._hkl_view, search_view)
+        return np.argwhere(bool_pos).flatten()
 
     @filename_check
     def get_space_group(self) -> str:

@@ -87,9 +87,9 @@ def auspex_init(version, command_line):
 
 def suppress_warnings():
     warnings.filterwarnings("ignore", message="The integral is probably divergent, or slowly convergent.")
-    # warnings.filterwarnings("ignore", message="divide by zero encountered in")
-    # warnings.filterwarnings("ignore", message="invalid value encountered in cumprob_c_intensity")
-    # warnings.filterwarnings("ignore", message="The occurrence of roundoff error is detected")
+    warnings.filterwarnings("ignore", message="divide by zero encountered in")
+    warnings.filterwarnings("ignore", message="invalid value encountered in cumprob_c_intensity")
+    warnings.filterwarnings("ignore", message="The occurrence of roundoff error is detected")
 
 def generate_plot():
     print("_______________________________________________________________________________\n")

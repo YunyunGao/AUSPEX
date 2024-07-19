@@ -364,6 +364,9 @@ class ReflectionParser(object):
                                 continue
                             else:
                                 return_ma = miller_arrays[model][key]
+            elif self.source_data_format == 'xds_hkl':
+                return_ma = self._obj.as_miller_array(merge_equivalents=True)
+
         try:
             return_ma
         except NameError:
