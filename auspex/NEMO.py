@@ -48,6 +48,7 @@ class NemoHandler(object):
         self._l = 0.496  # hyperparameter l: intersection fraction, snr trained 0.496
         self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, snr trained 0.598
         self._m1 = 0.109  # recurrence rate below 30 Angstrom, snr trained 0.109.
+        self._m1_i = 0.083  # recurrence rate below 30 Angstrom for intensity, snr trained 0.083.
         self._m2 = 0.519  # recurrence rate between 30-20 Angstrom, snr trained 0.519.
         self._m3 = 0.787  # recurrence rate between 20-10 Angstrom, snr trained  0.787.
 
@@ -230,8 +231,12 @@ class NemoHandler(object):
             final_weak_ind = ind_weak[weak_prob <= 1e-3]
         else:
             # when the elements in the clusters are varying.
-            repetitive_ind_30 = (cluster_counts_recur >= cluster_counts_recur.max() * self._m1) & \
-                                (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 30.)
+            if self._work_obs.is_xray_amplitude_array():
+                repetitive_ind_30 = (cluster_counts_recur >= cluster_counts_recur.max() * self._m1) & \
+                                    (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 30.)
+            if self._work_obs.is_xray_intensity_array():
+                repetitive_ind_30 = (cluster_counts_recur >= cluster_counts_recur.max() * self._m1_i) & \
+                                    (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 30.)
             repetitive_ind_20 = (cluster_counts_recur >= cluster_counts_recur.max() * self._m2) & \
                                 (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] >= 20.) & \
                                 (self._work_obs.d_spacings().data().as_numpy_array()[cluster_ind_recur] < 30.)
