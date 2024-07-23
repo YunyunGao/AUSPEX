@@ -44,7 +44,7 @@ class NemoHandler(object):
         self._original_row_ind = None
         self._detect_option = ['obs_over_sig', 'obs']
         self._t = 0.0248  # hyperparamter t: french_wilson_level, snr trained 0.0248
-        self._t_i = 0.1265  # hyperparamter t for intensity: snr trained 0.1265
+        self._t_i = 0.2265  # hyperparamter t for intensity: snr trained 0.2265
         self._l = 0.496  # hyperparameter l: intersection fraction, snr trained 0.496
         self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, snr trained 0.598
         self._m1 = 0.109  # recurrence rate below 30 Angstrom, snr trained 0.109.
