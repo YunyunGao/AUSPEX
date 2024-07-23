@@ -44,7 +44,7 @@ class NemoHandler(object):
         self._original_row_ind = None
         self._detect_option = ['obs_over_sig', 'obs']
         self._t = 0.0248  # hyperparamter t: french_wilson_level, snr trained 0.0248
-        self._t_i = 0.0565  # hyperparamter t for intensity: snr trained 0.0565
+        self._t_i = 0.1265  # hyperparamter t for intensity: snr trained 0.1265
         self._l = 0.496  # hyperparameter l: intersection fraction, snr trained 0.496
         self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, snr trained 0.598
         self._m1 = 0.109  # recurrence rate below 30 Angstrom, snr trained 0.109.
@@ -171,15 +171,18 @@ class NemoHandler(object):
 
         if self._work_obs.is_xray_amplitude_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t]
-
+            max_search_size = np.sum(
+                weak_prob <= 0.05)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
         if self._work_obs.is_xray_intensity_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t_i]
+            max_search_size = np.sum(
+                weak_prob <= 0.10)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
 
         auspex_array_for_fit = copy.deepcopy(auspex_array)
         auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1], 95) / auspex_array_for_fit[:, 0].max() * auspex_array[:, 0]
 
         ind_cluster_by_size = []
-        max_search_size = np.sum(weak_prob <= 0.01)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+
         for num_points in range(max_search_size, 1, -1):
             detect = HDBSCAN(min_cluster_size=num_points)
                              #min_samples=ind_weak_work.size-num_points+1,
@@ -200,7 +203,7 @@ class NemoHandler(object):
                 in_token = np.empty(0, dtype=int)
                 in_prob = np.empty(0, dtype=float)
                 for c_label in unique_cluster_label:
-                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.41)).flatten()
+                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.49)).flatten()
                     if args_.size == 0:
                         continue
                     ind_sub_cluster = self._sorted_arg[:self._reso_select][args_]
@@ -448,7 +451,7 @@ def cumprob_c_intensity(e_square, sig):
     :return:  Probability of normalised centric intensity smaller than e_square with given sigma value sig.
     """
     # based on low level c for better speed
-    c = ctypes.c_double(sig+1e-12)
+    c = ctypes.c_double(sig+1e-9)
     user_data = ctypes.cast(ctypes.pointer(c), ctypes.c_void_p)
     prob_c_intensity_integrand = LowLevelCallable(lib.f, user_data)
     return nquad(prob_c_intensity_integrand, [[0, np.inf], [-np.inf, e_square]], opts={"limit": 301})[0]
