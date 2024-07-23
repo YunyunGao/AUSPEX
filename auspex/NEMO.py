@@ -172,11 +172,11 @@ class NemoHandler(object):
         if self._work_obs.is_xray_amplitude_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t]
             max_search_size = np.sum(
-                weak_prob <= 0.05)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+                weak_prob <= 0.015)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
         if self._work_obs.is_xray_intensity_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t_i]
             max_search_size = np.sum(
-                weak_prob <= 0.10)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+                weak_prob <= 0.025)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
 
         auspex_array_for_fit = copy.deepcopy(auspex_array)
         auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1], 95) / auspex_array_for_fit[:, 0].max() * auspex_array[:, 0]
