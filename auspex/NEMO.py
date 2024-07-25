@@ -142,8 +142,9 @@ class NemoHandler(object):
         :param y_option: 0 or 1 (0: signal-to-noise ratio; 1: signal only). Default value: 0.
         :return:None
         """
+        print(self._centric_ind_low)
         # it is possible low-resolution cutoff smaller than 10 angstrom, e.g. 7r33
-        if self._acentric_ind_low is None or self._centric_ind_low is None:
+        if self._acentric_ind_low.size == 0 and self._centric_ind_low.size == 0:
             self._final_nemo_ind = np.empty((0,), dtype=int)
             return None
 
