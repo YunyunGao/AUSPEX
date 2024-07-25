@@ -142,6 +142,11 @@ class NemoHandler(object):
         :param y_option: 0 or 1 (0: signal-to-noise ratio; 1: signal only). Default value: 0.
         :return:None
         """
+        # it is possible low-resolution cutoff smaller than 10 angstrom, e.g. 7r33
+        if self._acentric_ind_low is None or self._centric_ind_low is None:
+            self._final_nemo_ind = np.empty((0,), dtype=int)
+            return None
+
         y_option_ = self._detect_option[y_option]
 
         ac_outlier_flag, c_outlier_flag = self.outliers_by_wilson(0.5)
@@ -185,10 +190,10 @@ class NemoHandler(object):
         ind_cluster_by_size = []
 
         for num_points in range(max_search_size, 1, -1):
-            detect = HDBSCAN(min_cluster_size=num_points)
-                             #min_samples=ind_weak_work.size-num_points+1,
-                             #max_cluster_size=ind_weak_work.size,
-                             #algorithm='brute')
+            detect = HDBSCAN(min_cluster_size=num_points)  #TODO: code performance comparison with hdbscan lib
+                             #min_samples=ind_weak_work.size-num_points+1, # not needed because the noise bootstraping strategy
+                             #max_cluster_size=ind_weak_work.size,  # not needed because the noise bootstraping strategy
+                             #algorithm='brute') # the default works fine
             try:
                 cluster_fitted = detect.fit(auspex_array_for_fit)
             except KeyError:
