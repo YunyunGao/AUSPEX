@@ -17,6 +17,8 @@ import matplotlib.pyplot as plt
 
 from ReflectionData import Mtz, Xds, PlainASCII
 
+from mpi4py import MPI
+
 # initiate c lib for complex integral
 lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'lib/int_lib.so'))
 lib.f.restype = ctypes.c_double
@@ -142,7 +144,6 @@ class NemoHandler(object):
         :param y_option: 0 or 1 (0: signal-to-noise ratio; 1: signal only). Default value: 0.
         :return:None
         """
-        print(self._centric_ind_low)
         # it is possible low-resolution cutoff smaller than 10 angstrom, e.g. 7r33
         if self._acentric_ind_low.size == 0 and self._centric_ind_low.size == 0:
             self._final_nemo_ind = np.empty((0,), dtype=int)
@@ -183,15 +184,23 @@ class NemoHandler(object):
         if self._work_obs.is_xray_intensity_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t_i]
             max_search_size = np.sum(
-                weak_prob <= 0.025)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+                weak_prob <= 0.125)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
 
         auspex_array_for_fit = copy.deepcopy(auspex_array)
         auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1], 95) / auspex_array_for_fit[:, 0].max() * auspex_array[:, 0]
 
         ind_cluster_by_size = []
 
-        for num_points in range(max_search_size, 1, -1):
-            detect = HDBSCAN(min_cluster_size=num_points)  #TODO: code performance comparison with hdbscan lib
+        rank = MPI.COMM_WORLD.Get_rank()
+        size = MPI.COMM_WORLD.Get_size()
+
+        bootstrapping_range = range(max_search_size, 1, -1)
+        # for num_points in range(max_search_size, 1, -1):
+        for i, task in enumerate(bootstrapping_range):
+            if i % size != rank:
+                continue
+
+            detect = HDBSCAN(min_cluster_size=task)  #TODO: code performance comparison with hdbscan lib
                              #min_samples=ind_weak_work.size-num_points+1, # not needed because the noise bootstraping strategy
                              #max_cluster_size=ind_weak_work.size,  # not needed because the noise bootstraping strategy
                              #algorithm='brute') # the default works fine

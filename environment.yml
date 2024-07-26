@@ -15,5 +15,7 @@ dependencies:
   - msgpack-python
   - tensorflow
   - tabulate
+  - mpi4py
+  - openmpi
   - pip:
       - nptyping[complete]

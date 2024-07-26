@@ -90,6 +90,8 @@ def suppress_warnings():
     warnings.filterwarnings("ignore", message="divide by zero encountered in")
     warnings.filterwarnings("ignore", message="invalid value encountered in cumprob_c_intensity")
     warnings.filterwarnings("ignore", message="The occurrence of roundoff error is detected")
+    warnings.filterwarnings("ignore", message="shmem: mmap:")
+    warnings.filterwarnings("ignore", message="BTL coordinating structure")
 
 def generate_plot():
     print("_______________________________________________________________________________\n")
