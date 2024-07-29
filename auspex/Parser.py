@@ -10,7 +10,7 @@ from IceRings import IceRing
 from NEMO import NemoHandler
 from ReflectionData.AutoReader import FileReader
 from ReflectionData.PlainASCII import IntegrateHKLPlain
-from Verbose import MergeStatistics, suppress_warnings, auspex_init
+from Verbose import MergeStatistics, suppress_warnings, auspex_init, report_ice_ring
 
 suppress_warnings()
 
@@ -274,8 +274,10 @@ if exists(filename):
 
 
     # Write a text file
-    if args.text_filename is not None:
-        ice_info.WriteTextFile(args.text_filename)
+    #if args.text_filename is not None:
+    #    ice_info.WriteTextFile(args.text_filename)
+
+    report_ice_ring(ice_info.quantitative_score())
 
     plot = PlotGenerator(
         ice_info,
