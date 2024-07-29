@@ -98,7 +98,7 @@ def generate_plot():
     print("                                GENERATING PLOTS:                              ")
     # print("        (Depending on the size of the data set, this may take a moment)        \n")
 
-def report_ice_ring(ice_ring_score):
+def report_ice_ring(ice_ring_score, d_max):
     print("_______________________________________________________________________________\n")
     print("{:^79}\n".format("QUANTITATIVE ICE RING SCORE"))
     print("The severity of ice ring contamination at the corresponding resolution ranges.")
@@ -107,8 +107,12 @@ def report_ice_ring(ice_ring_score):
     ice_rings = ["3.95-3.81", "3.75-3.58", "3.48-3.37", "2.68-2.64", "2.29-2.21", "2.09-2.04", "1.954-1.939",
                  "1.935-1.897", "1.889-1.863", "1.723-1.171", "1.527-1.516", "1.476-1.465", "1.446-1.434",
                  "1.372-1.365", "1.305-1.292", "1.285-1.247", "1.240-1.217", "1.186-1.162", "1.135-1.119",
-                 "1.099-1.067", "1.052-1.029", "1.017-1.011", "0.100-0.984", "0.981-0.975", "0.973-0.966"]
-    ice_ring_dict = {"reosolution (Ang)": ice_rings, "score": ice_ring_score.tolist()[0]}
+                 "1.099-1.067", "1.052-1.029", "1.017-1.011", "1.000-0.984", "0.981-0.975", "0.973-0.966"]
+    ice_rings_higher_lim = np.array([3.95, 3.75, 3.48, 2.68, 2.29, 2.09, 1.954, 1.935, 1.889, 1.723, 1.527, 1.476, 1.446,
+                                    1.372, 1.304, 1.285, 1.240, 1.186, 1.135, 1.099, 1.052, 1.017, 1.000, 0.981, 0.973],
+                                    dtype=np.float16)
+    d_max_ind = np.sum(ice_rings_higher_lim >= d_max)
+    ice_ring_dict = {"reosolution (Ang)": ice_rings[:d_max_ind], "score": ice_ring_score.tolist()[0][:d_max_ind]}
     table = tabulate(ice_ring_dict,
                      headers="keys",
                      tablefmt="github",

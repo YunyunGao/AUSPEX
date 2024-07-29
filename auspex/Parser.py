@@ -277,7 +277,7 @@ if exists(filename):
     #if args.text_filename is not None:
     #    ice_info.WriteTextFile(args.text_filename)
 
-    report_ice_ring(ice_info.quantitative_score())
+    report_ice_ring(ice_info.quantitative_score(), ice_info.max_ires())
 
     plot = PlotGenerator(
         ice_info,
@@ -303,8 +303,6 @@ if exists(filename):
             os.remove("mtz_with_ice_ring.txt")
         outfile = open("mtz_with_ice_rings.txt", "a")
         print(os.path.split(filename)[1], file=outfile)
-
-
 
 else:
     print("File {0} does not exist.".format(filename))

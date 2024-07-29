@@ -117,10 +117,17 @@ class IceFinder(object):
 
     def mean_ires_squared(self) -> np.ndarray[Literal["N"], np.float32]:
         """Return the mean d-spacing squared for all bins.
-        :return: mean d-spacing squared (inverse resolution squared) of all bins
+        :return: mean inverse d-spacing squared (inverse resolution squared) of all bins
         :rtype: Nx1 ndarray(dtype=float)
         """
         return self._binned_summaries.mean_invresolsq_all()
+
+    def max_ires(self):
+        """Return the max d-spacing.
+        :return: max d-spacing
+        :rtype: float
+        """
+        return self._reflection_data.get_max_resolution()
 
     def ice_range_by_icefinderscore(self, cutoff: float = 5.) -> np.ndarray[Literal["N", 2], np.float32]:
         """Calculate the ice ring range based on icefinder scores. Return the lower and upper bounds.
