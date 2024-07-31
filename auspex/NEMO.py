@@ -44,7 +44,7 @@ class NemoHandler(object):
         self._prob_c = None
         self._final_nemo_ind = None
         self._original_row_ind = None
-        self._detect_option = ['obs_over_sig', 'obs']
+        self._detect_option = ['obs_over_sig', 'obs', 'fw_intensities']
         self._t = 0.0248  # hyperparamter t: french_wilson_level, snr trained 0.0248
         self._t_i = 0.1965  # hyperparamter t for intensity: snr trained 0.1965
         self._l = 0.496  # hyperparameter l: intersection fraction, snr trained 0.496
@@ -136,7 +136,7 @@ class NemoHandler(object):
         recovered_ind = ind_weak + in_add
         return np.sort(recovered_ind)
 
-    def cluster_detect(self, y_option:  0 | 1 = 0):
+    def cluster_detect(self, y_option:  0 | 1 | 2 = 0):
         """The core algorithm for NEMO detection. Record the indices of NEMOs corresponding to the input reflection data.
         While x is fixed to d-spacing squared, choose y_option from 0 or 1 to determine what is to be used as y
         (0: signal-to-noise ratio; 1: signal only).
@@ -176,15 +176,21 @@ class NemoHandler(object):
         if y_option_ == 'obs':
             # j = np.concatenate((ac_weak, c_weak))
             auspex_array = np.vstack((1. / (self._reso_low ** 2), self._obs_low)).transpose()
+        if y_option_ == 'fw_intensities':
+            auspex_array = np.vstack((1. / (self._reso_low ** 2),
+                                      np.divide(self._obs_low**2,
+                                                2*np.maximum(0.01, self._sig_low)*np.abs(np.maximum(.01, np.abs(self._obs_low), self._sig_low))
+                                                , out=np.zeros_like(self._obs_low), where=self._sig_low != 0.))
+                                     ).transpose()
 
         if self._work_obs.is_xray_amplitude_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t]
             max_search_size = np.sum(
-                weak_prob <= 0.015)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+                weak_prob <= 0.0155)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
         if self._work_obs.is_xray_intensity_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t_i]
             max_search_size = np.sum(
-                weak_prob <= 0.085)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+                weak_prob <= 0.0855)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
 
         auspex_array_for_fit = copy.deepcopy(auspex_array)
         auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1], 95) / auspex_array_for_fit[:, 0].max() * auspex_array[:, 0]
