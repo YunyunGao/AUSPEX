@@ -46,7 +46,7 @@ class NemoHandler(object):
         self._original_row_ind = None
         self._detect_option = ['obs_over_sig', 'obs']
         self._t = 0.0248  # hyperparamter t: french_wilson_level, snr trained 0.0248
-        self._t_i = 0.2265  # hyperparamter t for intensity: snr trained 0.2265
+        self._t_i = 0.1965  # hyperparamter t for intensity: snr trained 0.1965
         self._l = 0.496  # hyperparameter l: intersection fraction, snr trained 0.496
         self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, snr trained 0.598
         self._m1 = 0.109  # recurrence rate below 30 Angstrom, snr trained 0.109.
@@ -184,7 +184,7 @@ class NemoHandler(object):
         if self._work_obs.is_xray_intensity_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t_i]
             max_search_size = np.sum(
-                weak_prob <= 0.125)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+                weak_prob <= 0.085)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
 
         auspex_array_for_fit = copy.deepcopy(auspex_array)
         auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1], 95) / auspex_array_for_fit[:, 0].max() * auspex_array[:, 0]

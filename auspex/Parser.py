@@ -30,19 +30,19 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--helcaraxe',
+    '--disable_helcaraxe',
     dest='helcaraxe',
     action='store_false',
     default=True,
-    help='Use CNN model to predict ice contamination. The default option.'
+    help='Do not use CNN model to predict ice contamination. The default option.'
 )
 
 parser.add_argument(
-    '--beamstop_outlier',
+    '--disable_beamstop_outlier',
     dest='beamstop_outlier',
     action='store_false',
     default=True,
-    help='Use clustering-derived method to detect beamstop shadow outliers. True by default.'
+    help='Do not use NEMOs clustering strategy to detect beamstop shadow outliers. True by default.'
 )
 
 parser.add_argument(
