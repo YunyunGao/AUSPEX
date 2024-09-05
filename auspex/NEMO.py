@@ -80,7 +80,7 @@ class NemoHandler(object):
                 sigmas=normalizer.normalised_miller_dev_eps.sigmas()
             )
         self._centric_flag = self._work_norma_obs.centric_flags().data().as_numpy_array()[self._sorted_arg][:self._reso_select]
-        self._acentric_flag = ~self._work_norma_obs.centric_flags().data().as_numpy_array()[self._sorted_arg][:self._reso_select]
+        self._acentric_flag = ~self._centric_flag #self._work_norma_obs.centric_flags().data().as_numpy_array()[self._sorted_arg][:self._reso_select]
         self._centric_ind_low = self._sorted_arg[:self._reso_select][self._centric_flag]
         self._acentric_ind_low = self._sorted_arg[:self._reso_select][self._acentric_flag]
 
