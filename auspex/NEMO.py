@@ -353,9 +353,6 @@ class NemoHandler(object):
             self._original_row_ind = np.concatenate(row_exclude)
         return self._original_row_ind
 
-    def ft_and_tar(self) -> tuple[np.ndarray, np.ndarray]:
-        return np.arange(0, self._reso_select), np.isin(self._sorted_arg[:self._reso_select], self._final_nemo_ind).astype(int)
-
     def weak_by_signal_to_noise(self, level: float = 6.) -> np.ndarray[bool]:
         """Return the indices of weak observations with high errors.
 
