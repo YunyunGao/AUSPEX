@@ -118,3 +118,9 @@ def report_ice_ring(ice_ring_score, d_max):
                      tablefmt="github",
                      disable_numparse=True)
     print(table)
+
+
+def report_NEMO(nemo_indices):
+    print("_______________________________________________________________________________\n")
+    print("{:^79}\n".format("Not-excluded Beamstop unMask Outliers (NEMOs)"))
+    print("Following Reflections are  ")

@@ -9,7 +9,8 @@ These plots are classified by a CNN model and the prediction is returned as a nu
 import numpy as np
 import scipy as scp
 import tensorflow as tf
-from tensorflow import keras, image, convert_to_tensor
+import keras
+from tensorflow import image, convert_to_tensor
 tf.get_logger().setLevel('ERROR')
 
 import os
@@ -43,8 +44,18 @@ def cnn_predict(i_res, i_obs, f_res, f_obs):
     global model
 
     ice_ranges = np.genfromtxt(os.path.join(current_path, "Helcaraxe_models/Auspex_ranges.csv"), delimiter=';')
-    model_iobs = keras.models.load_model(os.path.join(current_path, "Helcaraxe_models/final_models/Helcaraxe_Iobs_model"))
-    model_fobs = keras.models.load_model(os.path.join(current_path, "Helcaraxe_models/final_models/Helcaraxe_Fobs_model"))
+    if tf.keras.__name__ == 'keras.api._v2.keras':
+        model_iobs = tf.keras.models.load_model(
+            os.path.join(current_path, "Helcaraxe_models/final_models/Helcaraxe_Iobs_model"))
+        model_fobs = tf.keras.models.load_model(
+            os.path.join(current_path, "Helcaraxe_models/final_models/Helcaraxe_Fobs_model"))
+    elif tf.keras.__name__ == 'keras._tf_keras.keras':
+        model_iobs = keras.models.load_model(
+            os.path.join(current_path, "Helcaraxe_models/final_models/Helcaraxe_Iobs_model.h5"))
+        model_fobs = keras.models.load_model(
+            os.path.join(current_path, "Helcaraxe_models/final_models/Helcaraxe_Fobs_model.h5"))
+    else:
+        raise ImportError("The keras version {0} is unknown.".format(tf.keras.__name__))
     I_prediction_lst, F_prediction_lst = None, None
 
     # Raises Exception if no f_obs or i_obs values

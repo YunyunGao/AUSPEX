@@ -64,6 +64,8 @@ class NemoHandler(object):
         self._refl_data = reflection_data
         self._work_obs = reflection_data.get_miller_array(observation_label)
         d_spacings = self._work_obs.d_spacings().data().as_numpy_array()
+
+        # only take low reso sub-dataset to fasten the prio-processing
         self._sorted_arg = d_spacings.argsort()[::-1]
         self._reso_select = (d_spacings > self._reso_min).sum()
         self._reso_low = d_spacings[self._sorted_arg][:self._reso_select]

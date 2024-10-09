@@ -18,6 +18,8 @@ auspex.egg-info/dependency_links.txt
 auspex.egg-info/entry_points.txt
 auspex.egg-info/top_level.txt
 auspex/Helcaraxe_models/Auspex_ranges.csv
+auspex/Helcaraxe_models/final_models/Helcaraxe_Fobs_model.h5
+auspex/Helcaraxe_models/final_models/Helcaraxe_Iobs_model.h5
 auspex/Helcaraxe_models/final_models/Helcaraxe_Fobs_model/keras_metadata.pb
 auspex/Helcaraxe_models/final_models/Helcaraxe_Fobs_model/saved_model.pb
 auspex/Helcaraxe_models/final_models/Helcaraxe_Fobs_model/variables/variables.data-00000-of-00001
