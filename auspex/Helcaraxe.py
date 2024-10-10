@@ -1,11 +1,3 @@
-"""
-This code was written by Kristopher Nolte in 2020/2021 as part of Thorn Lab, University of Hamburg
- and modified by Yunyun Gao to fit into Auspex.
-This .py takes I_obs, F_obs and Resolution values and out of this produces plots
-of resolution ranges in which ice rings can appear.
-These plots are classified by a CNN model and the prediction is returned as a numpy array
-"""
-
 import numpy as np
 import scipy as scp
 import tensorflow as tf
@@ -138,6 +130,43 @@ def plot_generator(res_lst, y_lst, ice_ranges):
 
             del_list = discriminator(bin_arr, pos)
             plot_lst.append(bin_arr)
+
+        elif max_res <= res_bin_start and max_res >= res_bin_end:
+            for j, res in enumerate(res_lst):
+                if res <= res_bin_start and res >= res_bin_end:
+                    y_range.append(y_lst[j])
+            y_range.append(y_lst[-1])
+
+            try:
+                y_limit = [np.percentile(y_range, 0.5), np.percentile(y_range, 95)]
+            except IndexError:
+                y_limit = [0, np.percentile(y_lst, 90)]
+
+            # bin of resolution is set -> [xmin, xmax][ymin, ymax]
+            image_bin = [res_bin_end, res_bin_start], y_limit
+
+            # create a 2D histogram of the resolution range
+            bin_arr, xedges, yedges = np.histogram2d(res_lst, y_lst, range=image_bin, bins=80)
+            bin_arr = scp.ndimage.rotate(bin_arr, 90)
+
+            def discriminator(plot, pos):
+                """
+                :param plot: 2D array of intensities against resolution
+                :param pos: index of resolution range
+                :return: sets blank images to None in prediction_lst -> They will not be predicted by the model
+                """
+                step = 10
+                i = 0
+                while i < 80:
+                    if np.mean(plot[:, i:i + step]) <= 0.005:
+                        del_lst[pos - 1] = 99
+                        break
+                    i += 5
+                return del_lst
+
+            del_list = discriminator(bin_arr, pos)
+            plot_lst.append(bin_arr)
+
 
     # plots are reshaped in a CNN usable format and standardized
     if len(plot_lst) > 0:

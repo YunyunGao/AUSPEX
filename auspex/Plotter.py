@@ -432,13 +432,13 @@ class PlotGenerator(object):
         xmax = max(D2)
         xmin = min(0, min(D2))
 
-        standardised_mean = []
-        estimated_standardised_mean = []
-        i_res_squared = []
-        for idx in range(self.icefinder_handle.Size()):
-            i_res_squared.append(self.icefinder_handle.MeanIResSquared(idx))
-            standardised_mean.append(self.icefinder_handle.ObsStandardisedMean(idx))
-            estimated_standardised_mean.append(self.icefinder_handle.EstimatedStandardisedMean(idx))
+        standardised_mean = self.icefinder_handle._binned_summaries.get_stdmean_all()
+        estimated_standardised_mean = self.icefinder_handle._binned_summaries.get_est_stdmeans()
+        i_res_squared = self.icefinder_handle._binned_summaries.mean_invresolsq_all()
+        # for idx in range(self.icefinder_handle.Size()):
+        #     i_res_squared.append(self.icefinder_handle._binned_summaries.MeanIResSquared(idx))
+        #     standardised_mean.append(self.icefinder_handle._binned_summaries.ObsStandardisedMean(idx))
+        #     estimated_standardised_mean.append(self.icefinder_handle._binned_summaries.EstimatedStandardisedMean(idx))
 
         #Define function that calculates 1/x^2
         def formatter(x, p):
@@ -463,11 +463,11 @@ class PlotGenerator(object):
 
     def generate_icefinderscore_plot(self, I, D2, ax=None):
 
-        icefinderscore = []
-        i_res_squared = []
-        for idx in range(self.icefinder_handle.Size()):
-            i_res_squared.append(self.icefinder_handle.MeanIResSquared(idx))
-            icefinderscore.append(self.icefinder_handle.IcefinderScore(idx))
+        i_res_squared = self.icefinder_handle._binned_summaries.mean_invresolsq_all()
+        icefinderscore = self.icefinder_handle.icefinder_scores()
+        # for idx in range(self.icefinder_handle.Size()):
+        #     i_res_squared.append(self.icefinder_handle.MeanIResSquared(idx))
+        #     icefinderscore.append(self.icefinder_handle.IcefinderScore(idx))
 
         xmax = max(D2)
         xmin = min(0, min(D2))

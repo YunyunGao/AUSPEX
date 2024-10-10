@@ -215,16 +215,21 @@ if exists(filename):
     ice_info = IceFinder(reflection_data, ice, use_anom_if_present=args.use_anom_if_present)
     if args.helcaraxe is True:
         ice_info.run_helcaraxe()
+        report_ice_ring(ice_info.quantitative_score(), ice_info.max_ires(), True)
     elif ice_info.fobs is not None and args.use_anom_if_present:
         try:
             ice_info.binning('F_ano', binning=args.binning)
         except AssertionError:
             ice_info.binning('F', binning=args.binning)
+        ice_spike_range = ice_info.ice_range_by_icefinderscore(cutoff=args.cutoff)
+        report_ice_ring(ice_info.quantitative_score(), ice_info.max_ires(), False)
     elif (ice_info.iobs is not None) and (ice_info.fobs is None):
         try:
             ice_info.binning('I_ano', binning=args.binning)
         except AssertionError:
             ice_info.binning('I', binning=args.binning)
+        ice_spike_range = ice_info.ice_range_by_icefinderscore(cutoff=args.cutoff)
+        report_ice_ring(ice_info.quantitative_score(), ice_info.max_ires(), False)
 
     # Handling beamstop shadow outliers
     if args.beamstop_outlier:
@@ -276,8 +281,6 @@ if exists(filename):
     # Write a text file
     #if args.text_filename is not None:
     #    ice_info.WriteTextFile(args.text_filename)
-
-    report_ice_ring(ice_info.quantitative_score(), ice_info.max_ires())
 
     plot = PlotGenerator(
         ice_info,

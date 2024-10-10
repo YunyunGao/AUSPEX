@@ -40,11 +40,13 @@ class IceFinder(object):
         else:
             self._ice_ring = ice_ring
         self._bool_ranges_in_ice = None
+        self._args_ice_by_icefinderscore = None
         self._icefinder_scores = None
         self._helcaraxe_status = False
         self._cnn_predicted_i = None
         self._cnn_predicted_f = None
         self._has_ice_rings = False
+        self.binning()
 
     def binning(self,
                 obs_type: str = 'F',
@@ -186,14 +188,15 @@ class IceFinder(object):
             scores[args_minus] = 0.
             scores_in_ice_range = scores[self._bool_ranges_in_ice]
         else:  # normalized icefinderscore
-            icefinder_scores_in_ice = self.icefinder_scores()[self._args_ice_by_icefinderscore]
+            #icefinder_scores_in_ice = self.icefinder_scores()[self._args_ice_by_icefinderscore]
+            icefinder_scores_in_ice = self.icefinder_scores()[self.is_in_ice_ring()]
             # groupped_bin_args = self._binned_summaries.bins_in_icering_groupped(self._ice_ring)
             # scores_in_ice_range = []
             # for args in groupped_bin_args:
             #    scores_in_ice_range.append(self.icefinder_scores()[args].max())
             sorted_indices = sorted(np.argsort(icefinder_scores_in_ice)[-np.sum(self._bool_ranges_in_ice):])
-            scores_in_ice_range = icefinder_scores_in_ice[sorted_indices]
-            scores_in_ice_range /= icefinder_scores_in_ice.max()
+            scores_in_ice_range = np.abs(icefinder_scores_in_ice) #[sorted_indices]
+            scores_in_ice_range /= np.abs(icefinder_scores_in_ice[sorted_indices]).max()
         if np.any(self._bool_ranges_in_ice):
             self._has_ice_rings = True
         return scores_in_ice_range
