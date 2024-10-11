@@ -46,7 +46,6 @@ class IceFinder(object):
         self._cnn_predicted_i = None
         self._cnn_predicted_f = None
         self._has_ice_rings = False
-        self.binning()
 
     def binning(self,
                 obs_type: str = 'F',
@@ -161,7 +160,7 @@ class IceFinder(object):
         elif (self._cnn_predicted_f is None) and (self._cnn_predicted_i is not None):
             self._bool_ranges_in_ice = self._cnn_predicted_i >= cutoff
         elif (self._cnn_predicted_f is not None) and (self._cnn_predicted_i is not None):
-            self._bool_ranges_in_ice = (self._cnn_predicted_f >= cutoff) & (self._cnn_predicted_i >= cutoff)
+            self._bool_ranges_in_ice = (self._cnn_predicted_f >= cutoff) | (self._cnn_predicted_i >= cutoff)
         else:
             raise Exception("No Helcaraxe prediction. Please try to rerun Helcaraxe.")
         if np.any(self._bool_ranges_in_ice > cutoff):

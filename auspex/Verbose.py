@@ -99,7 +99,6 @@ def generate_plot():
     # print("        (Depending on the size of the data set, this may take a moment)        \n")
 
 def report_ice_ring(ice_ring_score, d_max, helcaraxe=True):
-    print(ice_ring_score)
     # column_labels = ["resolution (Ang)", "score"]
     ice_rings = ["3.95-3.81", "3.75-3.58", "3.48-3.37", "2.68-2.64", "2.29-2.21", "2.09-2.04", "1.954-1.939",
                  "1.935-1.897", "1.889-1.863", "1.723-1.171", "1.527-1.516", "1.476-1.465", "1.446-1.434",

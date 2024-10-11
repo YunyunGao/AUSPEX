@@ -213,7 +213,7 @@ if exists(filename):
          #   pass
 
     ice_info = IceFinder(reflection_data, ice, use_anom_if_present=args.use_anom_if_present)
-    if args.helcaraxe is True:
+    if args.helcaraxe is True and args.score_figure is not True:
         ice_info.run_helcaraxe()
         report_ice_ring(ice_info.quantitative_score(), ice_info.max_ires(), True)
     elif ice_info.fobs is not None and args.use_anom_if_present:
@@ -235,16 +235,22 @@ if exists(filename):
     if args.beamstop_outlier:
         if ice_info.fobs is not None:
             nemo_info_F = NemoHandler()
-            nemo_info_F.refl_data_prepare(ice_info._reflection_data, 'FP')
+            try:
+                nemo_info_F.refl_data_prepare(ice_info._reflection_data, 'FP')
+                nemo_info_F.get_nemo_row_ind()
+            except ValueError:
+                nemo_info_F = None
             #nemo_info_F.cluster_detect(0)
-            nemo_info_F.get_nemo_row_ind()
         else:
             nemo_info_F = None
         if ice_info.iobs is not None:
             nemo_info_I = NemoHandler()
-            nemo_info_I.refl_data_prepare(ice_info._reflection_data, 'I')
+            try:
+                nemo_info_I.refl_data_prepare(ice_info._reflection_data, 'I')
+                nemo_info_I.get_nemo_row_ind()
+            except ValueError:
+                nemo_info_I = None
             #nemo_info_I.cluster_detect(0)
-            nemo_info_I.get_nemo_row_ind()
         else:
             nemo_info_I = None
 

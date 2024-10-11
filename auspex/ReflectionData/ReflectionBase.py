@@ -356,10 +356,10 @@ class ReflectionParser(object):
                         continue
             elif self.source_data_format == 'cif':
                 miller_arrays = self._obj.build_miller_arrays()
-                wavelength_id = np.array(miller_arrays[model]['_refln.wavelength_id'].data())[0]
                 for model in miller_arrays.keys():
+                    wavelength_id = np.array(miller_arrays[model]['_refln.wavelength_id'].data())[0]
                     for key in miller_arrays[model].keys():
-                        if ('intensity_meas' in key) and ('wavelength_id='+wavelength_id in key):
+                        if ('intensity_meas' in key) and ('wavelength_id={:d}'.format(wavelength_id) in key):
                             if miller_arrays[model][key].anomalous_flag():
                                 continue
                             else:
@@ -370,7 +370,7 @@ class ReflectionParser(object):
         try:
             return_ma
         except NameError:
-            raise ValueError('Non-standard colum label')
+            raise ValueError('{0} is a non-standard colum label'.format(observation_type))
         return return_ma
 
 

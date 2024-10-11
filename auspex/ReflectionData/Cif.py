@@ -13,6 +13,7 @@ class CifParser(ReflectionParser):
         self._resolutionF = None
         self._resolutionI = None
         self._resolutionI_ano = None
+        self._resolution = None
 
     def read(self, filename: str = None):
         """Read the given cif file.
@@ -49,6 +50,12 @@ class CifParser(ReflectionParser):
                                                          unit_cell().d(miller_arrays[model][key].indices()),
                                                          dtype=float)
             self._filename = filename
+            if self._resolutionF is not None and self._resolutionI is None:
+                self._resolution = self._resolutionF
+            if self._resolutionI is not None and self._resolutionF is None:
+                self._resolution = self._resolutionI
+            if self._resolutionI_ano is not None:
+                self._resolution = self._resolutionI_ano
 
     @filename_check
     def get_space_group(self) -> str:
@@ -65,3 +72,12 @@ class CifParser(ReflectionParser):
         :rtype: list
         """
         return self._unit_cell.parameters()
+
+    @filename_check
+    def get_max_resolution(self) -> float:
+        """
+        :return: maximum resolution
+        :rtype: float
+        """
+        return self._resolution.min()
+

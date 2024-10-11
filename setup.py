@@ -5,7 +5,7 @@ from setuptools.command import install
 
 setup(
     name='auspex',
-    version='2.3.1',
+    version='2.3.2',
     author='Yunyun Gao',
     author_email='yunyun.gao@desy.de',
     packages=find_packages(),
