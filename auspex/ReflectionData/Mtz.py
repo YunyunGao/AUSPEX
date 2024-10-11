@@ -13,8 +13,21 @@ class MtzParser(ReflectionParser):
 
     def __init__(self):
         super(MtzParser, self).__init__()
+        # refmac columns
         self._Fobs_refmac = None
         self._Fcalc_refmac = None
+        self._FP_refmac = None
+        self._FC_refmac = None
+        self._FC_ALL_refmac = None
+        self._FC_ALL_LS_refmac = None
+        self._FOM_refmac = None
+        # phenix columns
+        self._Fobs_phenix = None
+        self._Fcalc_phenix = None
+        self._Fobs_meta_phenix = None
+        self._Fmodel_phenix = None
+        # ESS mtz
+        self._lam = None
 
     def read(self, filename: str = None):
         """Read the given mtz file
@@ -94,6 +107,9 @@ class MtzParser(ReflectionParser):
             self._Fobs_meta_phenix = columns[cidx['Fobs_meta_phenix'][0]].extract_values().as_numpy_array()
         if self.column_exits(cidx['Fmodel_phenix']):
             self._Fmodel_phenix = columns[cidx['Fmodel_phenix'][0]].extract_values().as_numpy_array()
+        # read ESS mtz output
+        if self.column_exits(cidx['LAM']):
+            self._lam = columns[cidx['LAM'][0]].extract_values().as_numpy_array()
         # read resolution
         self._resolution = np.array(self._obj.crystals()[0].unit_cell().d(self._obj.extract_miller_indices()))
         self._filename = filename
@@ -199,6 +215,8 @@ class MtzParser(ReflectionParser):
                              np.argwhere(column_labels == 'F-model_xray').flatten()
         fobs_phenix_cidx = np.argwhere(column_labels == 'FOBS').flatten()
         fcalc_phenix_cidx = np.argwhere(column_labels == 'FCALC').flatten()
+        # ESS neutron mtz
+        lam = (np.argwhere((column_types == 'R') & np.argwhere(column_labels == 'LAM'))).flatten()
         cidx = {'indices': miller_cidx,
                 'F': F_cidx,
                 'sig': sig_cidx,
@@ -219,6 +237,7 @@ class MtzParser(ReflectionParser):
                 'Fobs_phenix': fobs_phenix_cidx,
                 'Fcalc_phenix': fcalc_phenix_cidx,
                 'Fobs_meta_phenix': fobs_meta_phenix_cidx,
-                'Fmodel_phenix': fmodel_phenix_cidx
+                'Fmodel_phenix': fmodel_phenix_cidx,
+                'LAM': lam
                 }
         return cidx

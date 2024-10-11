@@ -74,6 +74,7 @@ class GenericPlot(object):
         # Set the output directory
         self.output_directory = output_directory
         self.name_stub = "output"
+        self.figure = None
 
     def get_ymax(self, y_data, multiplier):
         ymax = min(y_data.max(),
@@ -145,7 +146,7 @@ class GenericPlot(object):
 
         # Plot the points
         point_size = 4
-        ax1.scatter(
+        scat = ax1.scatter(
             resolution_shrinked,
             y_data_shrinked,
             point_size, 
@@ -153,6 +154,18 @@ class GenericPlot(object):
             color="#0d0d0d", 
             alpha=0.7*np.exp(-y_data.size*0.00004)+0.020,
             linewidth=0)
+
+        if icefinder_handle._reflection_data._lam is not None:
+            min_lax = icefinder_handle._reflection_data._lam.min()*1.1
+            max_lax = icefinder_handle._reflection_data._lam.max()*1.1
+            scalar_map = matplotlib.cm.ScalarMappable(norm=matplotlib.colors.Normalize(vmin=min_lax, vmax=max_lax),
+                                                      cmap=matplotlib.colormaps.get_cmap('jet_r'))
+            #ax1.scatter(resolution_shrinked[],)
+            plt.colorbar(scalar_map, ax=ax1, orientation='horizontal', shrink=0.25, aspect=20, location='top', anchor=(0.98, -0.1))
+            scat.set_facecolor(scalar_map.to_rgba(icefinder_handle._reflection_data._lam))
+            scat.set_alpha(.7*np.exp(-y_data.size*0.00004)+0.20)
+            #scat.set_sizes()
+            scat.set_clim(vmin=min_lax, vmax=max_lax)
 
         # Plot a teal line at y = 0
         ax1.axhline(0, color='#415a55', alpha=0.5)
