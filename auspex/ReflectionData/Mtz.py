@@ -47,7 +47,7 @@ class MtzParser(ReflectionParser):
         # read h, k, l
         # h = columns[cidx[0][0]].extract_values().as_numpy_array()
         # k = columns[cidx[0][1]].extract_values().as_numpy_array()
-        # l = columns[cidx[0][2]].extract_values().as_numpy_array()
+        # l = columns[cidx[0][2]].extract_values().as_numpy_arrayF()
         # self._hkl = np.array([h, k, l]).T
         self._hkl = np.array(self._obj.extract_miller_indices())
         # one line
@@ -216,7 +216,7 @@ class MtzParser(ReflectionParser):
         fobs_phenix_cidx = np.argwhere(column_labels == 'FOBS').flatten()
         fcalc_phenix_cidx = np.argwhere(column_labels == 'FCALC').flatten()
         # ESS neutron mtz
-        lam = (np.argwhere((column_types == 'R') & np.argwhere(column_labels == 'LAM'))).flatten()
+        lam = np.argwhere((column_types == 'R') & (column_labels == 'LAM')).flatten()
         cidx = {'indices': miller_cidx,
                 'F': F_cidx,
                 'sig': sig_cidx,

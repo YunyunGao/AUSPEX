@@ -222,7 +222,7 @@ class IPlot(GenericPlot):
         super(IPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "I_plot.png"
         self.title = r'$\mathrm{I_{obs}}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{I_{obs}}$'
         self.data_type = 'I'
 
@@ -234,7 +234,7 @@ class SigIPlot(GenericPlot):
         super(SigIPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "SigI_plot.png"
         self.title = r'$\mathrm{\sigma(I_{obs})}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{\sigma(I_{obs})}$'
         self.data_type = 'SigI'
 
@@ -246,7 +246,7 @@ class IoverSigIPlot(GenericPlot):
         super(IoverSigIPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "ISigI_plot.png"
         self.title = r'$\mathrm{I_{obs} / \sigma(I_{obs})}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{I_{obs} / \sigma(I_{obs})}$'
         self.data_type = 'ISigI'
 
@@ -258,7 +258,7 @@ class FPlot(GenericPlot):
         super(FPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "F_plot.png"
         self.title = r'$\mathrm{F_{obs}}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{F_{obs}}$'
         self.data_type = 'F'
 
@@ -270,7 +270,7 @@ class SigFPlot(GenericPlot):
         super(SigFPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "SigF_plot.png"
         self.title = r'$\mathrm{\sigma(F_{obs})}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{\sigma(F_{obs})}$'
         self.data_type = 'SigF'
 
@@ -281,7 +281,7 @@ class FoverSigFPlot(GenericPlot):
         super(FoverSigFPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "FSigF_plot.png"
         self.title = r'$\mathrm{F_{obs} / \sigma(F_{obs})}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{F_{obs} / \sigma(F_{obs})}$'
         self.data_type = 'FSigF'
 
@@ -293,7 +293,7 @@ class BPlot(GenericPlot):
         super(BPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "B_plot.png"
         self.title = r'$\mathrm{B_{obs}}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{B_{obs}}$'
         self.data_type = 'B'
 
@@ -305,7 +305,7 @@ class SigBPlot(GenericPlot):
         super(SigBPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "SigB_plot.png"
         self.title = r'$\mathrm{\sigma(B_{obs})}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{\sigma(B_{obs})}$'
         self.data_type = 'SigB'
 
@@ -317,7 +317,7 @@ class BoverSigBPlot(GenericPlot):
         super(BoverSigBPlot, self).__init__(ice_rings, **kwargs)
         self.filename = "BSigB_plot.png"
         self.title = r'$\mathrm{B_{obs} / \sigma(B_{obs})}$ vs. resolution'
-        self.xlabel = r'$1/\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
+        self.xlabel = r'$\mathrm{resolution} (\mathrm{\AA})$' # r'$1/\mathrm{resolution}^{2} (\mathrm{\AA}^{-2})$'
         self.ylabel = r'$\mathrm{B_{obs} / \sigma(B_{obs})}$'
         self.data_type = 'BSigB'
 
