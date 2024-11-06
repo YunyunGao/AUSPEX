@@ -92,7 +92,8 @@ def suppress_warnings():
     warnings.filterwarnings("ignore", message="The occurrence of roundoff error is detected")
     warnings.filterwarnings("ignore", message="shmem: mmap:")
     warnings.filterwarnings("ignore", message="BTL coordinating structure")
-
+    warnings.filterwarnings("ignore", message="Extremely bad integrand behavior occurs at some points of the integration interval.")
+    warnings.filterwarnings("ignore", message="If increasing the limit yields no improvement it is advised to")
 def generate_plot():
     print("_______________________________________________________________________________\n")
     print("                                GENERATING PLOTS:                              ")
