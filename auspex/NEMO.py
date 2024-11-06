@@ -482,12 +482,12 @@ def cumprob_c_intensity(e_square, sig):
     return nquad(prob_c_intensity_integrand, [[0, np.inf], [-np.inf, e_square]], opts={"limit": 301})[0]
 
 
-def construct_ih_table(obs, inv_res_sqr):
+def construct_hl_table(obs):
     obs_ext = obs[None, :] * np.ones(obs.size)[:, None]
-    inv_res_sqr_ext = inv_res_sqr[None, :] * np.ones(inv_res_sqr.size)[:, None]
-    obs_ih_table = delete_diag(obs_ext)
-    inv_res_sqr_ih_table = delete_diag(inv_res_sqr_ext)
-    return obs_ih_table, inv_res_sqr_ih_table
+    # inv_res_sqr_ext = inv_res_sqr[None, :] * np.ones(inv_res_sqr.size)[:, None]
+    obs_hl_table = delete_diag(obs_ext)
+    # inv_res_sqr_ih_table = delete_diag(inv_res_sqr_ext)
+    return obs_hl_table
 
 def delete_diag(square_matrix):
     # inspired by https://stackoverflow.com/questions/46736258/deleting-diagonal-elements-of-a-numpy-array

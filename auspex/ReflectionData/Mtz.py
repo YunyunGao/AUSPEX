@@ -1,5 +1,5 @@
 import os
-
+import copy
 import numpy as np
 from iotbx import mtz
 
@@ -241,3 +241,175 @@ class MtzParser(ReflectionParser):
                 'LAM': lam
                 }
         return cidx
+
+    def group_by_redundancies(self):
+        """Get the lists of indices/observations/resolutions grouped by the number of redundancy.
+
+        :returns: tuple(indices_container, obs_container, resolution_container)
+            WHERE
+            list indices_container: lists of indices
+            list obs_container: lists of observations
+            list resolution_container: lists of resolutions
+        """
+
+        merged_array = next((_ for _ in iter(self._obj.as_miller_arrays()) if 'I' in _.info().labels), None)
+        if merged_array is None:
+            raise AttributeError("The mtz {0} has no intensity column.".format(self.file_name))
+        unmerged_array = next((_ for _ in iter(self._obj.as_miller_arrays(merge_equivalents=False)) if 'I' in _.info().labels), None)
+        if unmerged_array.info().merged is True:
+            raise AttributeError("The mtz {0} are merged.".format(self.file_name))
+
+        # prepare data arrays
+        self._space_group = merged_array.crystal_symmetry().space_group()
+        self._hkl_merged = np.array(merged_array.indices())
+
+        # get redundancy of each reflection in merged data
+        redund = miller.merge_equivalents(unmerged_array.map_to_asu()).redundancies().data().as_numpy_array()
+
+        # get multiplicity of each reflection in merged data
+        multi = merged_array.multiplicities().data().as_numpy_array()
+
+        # get unique redundancies
+        uni_redund = np.unique(redund)
+        # creat containers for indices, obs and resolution grouped by the number of redundancies
+        indices_container = [list() for _ in range(uni_redund.size)]
+        obs_container = [list() for _ in range(uni_redund.size)]
+        resolution_container = [list() for _ in range(uni_redund.size)]
+        sigma_container = [list() for _ in range(uni_redund.size)]
+
+        # shrinkable shallow copy for unmerged indices, obs and resolution
+        tmp = self._hkl
+        tmp_obs = self._I
+        tmp_resol = self._resolution
+        # tmp_i_over_sig = self._I / self._sigI
+        tmp_sig = self._sigI
+
+        for idx, redund_num in enumerate(uni_redund[::-1]):  # loop through unique redundancy
+            args_redund = np.where(redund == redund_num)[0]
+            multi_of_args_redund = multi[args_redund]
+            # separate the args_redund by the multiplicities of corresponding reflections
+            args_redund_separated = [args_redund[multi_of_args_redund == uni] for uni in
+                                     np.unique(multi_of_args_redund)]
+            demension_reduction = 0
+            for args in args_redund_separated:  # loop through args_redund separated by multiplicity
+                # create iterator for merged data with specific multiplicity and redundancy
+                it = self._hkl_merged[args]
+                hkl_view = tmp.view([('a', int), ('b', int), ('c', int)])  # 1d view of Nx3 matrix
+
+                set_by_multiplicity = list()
+                for hkl_index in it:
+                    if redund_num == 1:
+                        set_by_multiplicity.append([hkl_index])
+                        continue
+                    sym_operator = miller.sym_equiv_indices(self._space_group, hkl_index.tolist())
+                    if redund_num == 2:
+                        if len(sym_operator.indices()) < redund_num:
+                            demension_reduction += 1
+                            continue
+                    set_by_multiplicity.append([_.h() for _ in sym_operator.indices()])
+
+                # set_by_multiplicity: NxMx3 array,
+                # N: number of obs with specific multiplicity and redundancy
+                # M: multiplicity
+                set_by_multiplicity = np.array(set_by_multiplicity, dtype=int)
+                multiplicity = set_by_multiplicity.shape[1]
+
+                logic_or = np.zeros(tmp.shape[0], dtype=bool)
+                for i in range(multiplicity):
+                    # compare_set: Nx3 array
+                    compare_set = copy.deepcopy(set_by_multiplicity[:, i, :]).view([('a', int), ('b', int), ('c', int)])
+                    # logic_or:  Nx1 bool array, true if obs exists,
+                    # N: the number of # of unmerged reflections (shrinkable after each loop)
+                    logic_or = logic_or | np.in1d(hkl_view, compare_set)
+                # fill out the container
+                indices_container[idx].append(tmp[logic_or])
+                obs_container[idx].append(tmp_obs[logic_or])
+                resolution_container[idx].append(tmp_resol[logic_or])
+                sigma_container[idx].append(tmp_sig[logic_or])
+                # shrink reflections
+                tmp = copy.deepcopy(tmp[~logic_or])
+                tmp_obs = tmp_obs[~logic_or]
+                tmp_resol = tmp_resol[~logic_or]
+                tmp_sig = tmp_sig[~logic_or]
+            indices_container[idx] = np.concatenate(indices_container[idx]).reshape(args_redund.size-demension_reduction, redund_num, 3)
+            obs_container[idx] = np.concatenate(obs_container[idx]).reshape(args_redund.size-demension_reduction, redund_num)
+            resolution_container[idx] = np.concatenate(resolution_container[idx]).reshape(args_redund.size-demension_reduction, redund_num)[:, 0]
+            sigma_container[idx] = np.concatenate(sigma_container[idx]).reshape(args_redund.size-demension_reduction, redund_num)
+        # apply sigma filter
+        for idx, redund_num in enumerate(uni_redund):
+            if redund_num == 1:
+                valid_args = sigma_container[idx] > 0.
+                sigma_container[idx] = sigma_container[idx][valid_args]
+                indices_container[idx] = indices_container[idx][valid_args]
+                obs_container[idx] = obs_container[idx][valid_args]
+                resolution_container[idx] = resolution_container[idx][valid_args[:, 0]]
+            else:
+                invalid_ind = np.argwhere(sigma_container[idx] < 0.)[:, 0]
+                invalid_idx, invalid_idx_counts = np.unique(invalid_ind, return_counts=True)
+                #
+                ind_to_remove = invalid_idx[invalid_idx_counts == redund_num]
+                sigma_container[idx] = np.delete(sigma_container[idx], ind_to_remove, 0)
+                indices_container[idx] = np.delete(indices_container[idx], ind_to_remove, 0)
+                obs_container[idx] = np.delete(obs_container[idx], ind_to_remove, 0)
+                resolution_container[idx] = np.delete(resolution_container[idx], ind_to_remove, 0)
+
+                for invalid_redund_num in range(1, redund_num):
+                    invalid_ind = np.argwhere(sigma_container[idx] < 0.)
+                    invalid_ind, invalid_ind_counts = np.unique(invalid_ind[:, 0], return_counts=True)
+                    valid_redund_num = redund_num - invalid_redund_num
+
+                    ind_to_downgrade = invalid_ind[invalid_ind_counts == invalid_redund_num]
+                    if ind_to_downgrade is None or ind_to_downgrade.size == 0:
+                        continue
+
+                    sig_array_to_downgrade = sigma_container[idx][ind_to_downgrade]
+                    sig_array_to_downgrade_args = sig_array_to_downgrade > 0.
+
+
+                    sig_array_downgraded = \
+                        sig_array_to_downgrade[sig_array_to_downgrade_args].reshape(sig_array_to_downgrade.shape[0], valid_redund_num)
+                    obs_array_downgraded = \
+                        obs_container[idx][ind_to_downgrade][sig_array_to_downgrade_args].reshape(sig_array_to_downgrade.shape[0], valid_redund_num)
+                    indices_array_downgraded = \
+                        indices_container[idx][ind_to_downgrade][sig_array_to_downgrade_args].reshape(sig_array_to_downgrade.shape[0], valid_redund_num, 3)
+                    resolution_array_downgraded = \
+                        resolution_container[idx][ind_to_downgrade]
+
+
+                    idx_multi_valid = np.argwhere(uni_redund == valid_redund_num).flatten()[0]
+
+                    sigma_container[idx_multi_valid] = np.append(sigma_container[idx_multi_valid], sig_array_downgraded, 0)
+                    indices_container[idx_multi_valid] = np.append(indices_container[idx_multi_valid], indices_array_downgraded, 0)
+                    obs_container[idx_multi_valid] = np.append(obs_container[idx_multi_valid], obs_array_downgraded, 0)
+                    resolution_container[idx_multi_valid] = np.append(resolution_container[idx_multi_valid], resolution_array_downgraded, 0)
+
+                    sigma_container[idx] = np.delete(sigma_container[idx], ind_to_downgrade, 0)
+                    indices_container[idx] = np.delete(indices_container[idx], ind_to_downgrade, 0)
+                    obs_container[idx] = np.delete(obs_container[idx], ind_to_downgrade, 0)
+                    resolution_container[idx] = np.delete(resolution_container[idx], ind_to_downgrade, 0)
+
+        self.hkl_by_multiplicity = indices_container
+        self.intensity_by_multiplicity = obs_container
+        self.ires_by_multiplicity = resolution_container
+        self.sig_by_multiplicity = sigma_container
+
+    def scaling_outliers(self):
+        assert self.hkl_by_multiplicity is not None
+        from scipy.linalg import svd
+
+        for i_redun, sig_redun in zip(self.intensity_by_multiplicity, self.sig_by_multiplicity):
+            AA = i_redun[:, :, None] * i_redun[:, None, :]
+            for A, ihl, sighl in zip(AA, i_redun, sig_redun):
+                U, s, Vh = svd(A)
+                whl = 1./(sighl*sighl)
+                ghl = U[:, 0] * Vh[0, :]
+                i_sum_denominator = np.sum(whl * ghl * ghl)
+                i_sum_numerator = np.sum(whl * ghl * ihl)
+                i_hl = i_sum_numerator / i_sum_denominator
+                ghl_table =
+
+
+
+
+
+
