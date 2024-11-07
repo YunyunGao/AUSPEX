@@ -395,18 +395,29 @@ class MtzParser(ReflectionParser):
 
     def scaling_outliers(self):
         assert self.hkl_by_multiplicity is not None
-        from scipy.linalg import svd
-
-        for i_redun, sig_redun in zip(self.intensity_by_multiplicity, self.sig_by_multiplicity):
-            AA = i_redun[:, :, None] * i_redun[:, None, :]
-            for A, ihl, sighl in zip(AA, i_redun, sig_redun):
-                U, s, Vh = svd(A)
-                whl = 1./(sighl*sighl)
-                ghl = U[:, 0] * Vh[0, :]
-                i_sum_denominator = np.sum(whl * ghl * ghl)
-                i_sum_numerator = np.sum(whl * ghl * ihl)
-                i_hl = i_sum_numerator / i_sum_denominator
-                ghl_table =
+        from ..lib.Utilities import cal_scaling_outlier
+        self._outlier_intensity = []
+        self._outlier_sigma = []
+        self._outlier_resolution = []
+        for i_redun, sig_redun, ires_redun in zip(self.intensity_by_multiplicity, self.sig_by_multiplicity, self.ires_by_multiplicity):
+            if i_redun.shape[0] == i_redun.size:
+                A = i_redun[:, None] * i_redun[:, None]
+                ind_filter = cal_scaling_outlier(A, i_redun, sig_redun)
+                self._outlier_intensity.extend(i_redun[ind_filter])
+                self._outlier_sigma.extend(sig_redun[ind_filter])
+                self._outlier_resolution.extend(np.full(i_redun.size, ires_redun)[ind_filter])
+            elif i_redun.shape[1] <= 2:
+                break
+            else:
+                AA = i_redun[:, :, None] * i_redun[:, None, :]
+                for A, ihl, sighl, ires_hl in zip(AA, i_redun, sig_redun, ires_redun):
+                    ind_filter = cal_scaling_outlier(A, ihl, sighl)
+                    self._outlier_intensity.extend(ihl[ind_filter])
+                    self._outlier_sigma.extend(sighl[ind_filter])
+                    self._outlier_resolution.extend(np.full(ihl.size, ires_hl)[ind_filter])
+        self._outlier_resolution = np.array(self._outlier_resolution)
+        self._outlier_intensity = np.array(self._outlier_intensity)
+        self._outlier_sigma = np.array(self._outlier_sigma)
 
 
 

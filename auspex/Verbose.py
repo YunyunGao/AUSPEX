@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 from tabulate import tabulate, SEPARATING_LINE
 
+import auspex.NEMO
 from auspex import __version__
 
 
@@ -92,7 +93,7 @@ def suppress_warnings():
     warnings.filterwarnings("ignore", message="The occurrence of roundoff error is detected")
     warnings.filterwarnings("ignore", message="shmem: mmap:")
     warnings.filterwarnings("ignore", message="BTL coordinating structure")
-    warnings.filterwarnings("ignore", message="Extremely bad integrand behavior occurs at some points of the integration interval.")
+    warnings.filterwarnings("ignore", message="Extremely bad integrand behavior occurs")
     warnings.filterwarnings("ignore", message="If increasing the limit yields no improvement it is advised to")
 def generate_plot():
     print("_______________________________________________________________________________\n")
@@ -129,7 +130,16 @@ def report_ice_ring(ice_ring_score, d_max, helcaraxe=True):
     print(table)
 
 
-def report_NEMO(nemo_indices):
+def report_NEMO(nemo_instance: auspex.NEMO.NemoHandler):
     print("_______________________________________________________________________________\n")
     print("{:^79}\n".format("Not-excluded Beamstop unMask Outliers (NEMOs)"))
-    print("Following Reflections are  ")
+    print("Following Reflections are considered to be NEMOs")
+    nemo_dict = {"indices": nemo_instance.get_nemo_indices(),
+                 "reosolution (Ang)": nemo_instance.get_nemo_D2()}
+
+    table = tabulate(nemo_dict,
+                     headers="keys",
+                     tablefmt="github",
+                     disable_numparse=True)
+
+    print(table)

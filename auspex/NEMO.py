@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from ReflectionData import Mtz, Xds, PlainASCII
 
 from mpi4py import MPI
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 # initiate c lib for complex integral
 lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), 'lib/int_lib.so'))
@@ -46,7 +47,7 @@ class NemoHandler(object):
         self._original_row_ind = None
         self._detect_option = ['obs_over_sig', 'obs', 'fw_intensities']
         self._t = 0.0248  # hyperparamter t: french_wilson_level, snr trained 0.0248
-        self._t_i = 0.1965  # hyperparamter t for intensity: snr trained 0.1965
+        self._t_i = 0.0965  # hyperparamter t for intensity: snr trained 0.1965
         self._l = 0.496  # hyperparameter l: intersection fraction, snr trained 0.496
         self._l_i = 0.598  # hyperparameter l for intensity: intersection fraction, snr trained 0.598
         self._m1 = 0.109  # recurrence rate below 30 Angstrom, snr trained 0.109.
@@ -187,12 +188,10 @@ class NemoHandler(object):
 
         if self._work_obs.is_xray_amplitude_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t]
-            max_search_size = np.sum(
-                weak_prob <= 0.0155)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+            max_search_size = min(os.cpu_count()*10, np.sum(weak_prob <= 0.0155)) # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
         if self._work_obs.is_xray_intensity_array():
             ind_weak_work = copy.deepcopy(ind_weak)[weak_prob <= self._t_i]
-            max_search_size = np.sum(
-                weak_prob <= 0.0855)  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
+            max_search_size = min(os.cpu_count()*10, np.sum(weak_prob <= 0.0455))  # setting minimum noise level. It seems reaching an extremely low noise level is unecessary.
 
         auspex_array_for_fit = copy.deepcopy(auspex_array)
         auspex_array_for_fit[:, 0] = np.percentile(auspex_array_for_fit[:, 1], 95) / auspex_array_for_fit[:, 0].max() * auspex_array[:, 0]
@@ -202,13 +201,16 @@ class NemoHandler(object):
         rank = MPI.COMM_WORLD.Get_rank()
         size = MPI.COMM_WORLD.Get_size()
 
+        #min_search_size = (weak_prob < 0.01).sum() // 2
         bootstrapping_range = range(max_search_size, 1, -1)
+        #bootstrapping_range = range(max_search_size, min_search_size, -1)
         # for num_points in range(max_search_size, 1, -1):
         for i, task in enumerate(bootstrapping_range):
             if i % size != rank:
                 continue
 
-            detect = HDBSCAN(min_cluster_size=task)  #TODO: code performance comparison with hdbscan lib
+            detect = HDBSCAN(min_cluster_size=task,
+                             n_jobs=os.cpu_count())  #TODO: code performance comparison with hdbscan lib
                              #min_samples=ind_weak_work.size-num_points+1, # not needed because the noise bootstraping strategy
                              #max_cluster_size=ind_weak_work.size,  # not needed because the noise bootstraping strategy
                              #algorithm='brute') # the default works fine
@@ -275,6 +277,25 @@ class NemoHandler(object):
             final_weak_ind = ind_weak_and_cluster
 
         self._final_nemo_ind = final_weak_ind
+
+    def _robust_assignment(self, c_label, cluster_labels, cluster_prob, ind_weak_work):
+        #in_token = np.empty(0, dtype=int)
+        #in_prob = np.empty(0, dtype=float)
+        args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.49)).flatten()
+        if args_.size == 0:
+            return []
+        ind_sub_cluster = self._sorted_arg[:self._reso_select][args_]
+        wilson_filter = np.isin(ind_sub_cluster, ind_weak_work)
+
+        s_ij = (wilson_filter.sum() / wilson_filter.size) > self._l_i
+        if ((self._work_obs.is_xray_amplitude_array() and s_ij > self._l) or
+                (self._work_obs.is_xray_intensity_array() and s_ij > self._l_i)):
+            return ind_sub_cluster
+        else:
+            return []
+            #in_token = np.append(in_token, ind_sub_cluster)
+            #in_prob = np.append(in_prob, cluster_prob[args_])
+
 
     def get_nemo_indices(self) -> np.ndarray[np.int16]:
         """Return the row indices of NEMOs identified in the corresponding reflection data.
@@ -481,20 +502,6 @@ def cumprob_c_intensity(e_square, sig):
     prob_c_intensity_integrand = LowLevelCallable(lib.f, user_data)
     return nquad(prob_c_intensity_integrand, [[0, np.inf], [-np.inf, e_square]], opts={"limit": 301})[0]
 
-
-def construct_hl_table(obs):
-    obs_ext = obs[None, :] * np.ones(obs.size)[:, None]
-    # inv_res_sqr_ext = inv_res_sqr[None, :] * np.ones(inv_res_sqr.size)[:, None]
-    obs_hl_table = delete_diag(obs_ext)
-    # inv_res_sqr_ih_table = delete_diag(inv_res_sqr_ext)
-    return obs_hl_table
-
-def delete_diag(square_matrix):
-    # inspired by https://stackoverflow.com/questions/46736258/deleting-diagonal-elements-of-a-numpy-array
-    # delete diagonal elements
-    m = square_matrix.shape[0]
-    s0, s1 = square_matrix.strides
-    return np.lib.stride_tricks.as_strided(square_matrix.ravel()[1:], shape=(m-1, m), strides=(s0+s1, s1)).reshape(m, -1)
 
 def plot(x0 , y0, x1, y1, c, path):
     fig, ax = plt.subplots(1,1, figsize=(6, 6))

@@ -202,7 +202,12 @@ if exists(filename):
 
     # Handling icerings
     ice = IceRing()
-    reflection_data = FileReader(filename, args.input_type, args.unit_cell, args.space_group_number)
+    try:
+        reflection_data = FileReader(filename, args.input_type, args.unit_cell, args.space_group_number)
+    except RuntimeError as e:
+        if str(e) == 'cctbx Error: MTZ file read error:':
+            raise FileExistsError("{filename} does not have deposited structure factors.")
+
     print(reflection_data.source_data_format)
     if reflection_data.source_data_format in ('xds_hkl', 'shlex_hkl'):
         #try:
@@ -234,20 +239,26 @@ if exists(filename):
     # Handling beamstop shadow outliers
     if args.beamstop_outlier:
         if ice_info.fobs is not None:
-            nemo_info_F = NemoHandler()
+            default_low_reso = 10.
+            while (ice_info.fobs.ires > default_low_reso).sum() > 1e4:
+                default_low_reso += 0.5
+            nemo_info_F = NemoHandler(default_low_reso)
             try:
                 nemo_info_F.refl_data_prepare(ice_info._reflection_data, 'FP')
-                nemo_info_F.get_nemo_row_ind()
+                nemo_info_F.cluster_detect()
             except ValueError:
                 nemo_info_F = None
             #nemo_info_F.cluster_detect(0)
         else:
             nemo_info_F = None
         if ice_info.iobs is not None:
-            nemo_info_I = NemoHandler()
+            default_low_reso = 10.
+            while (ice_info.iobs.ires > default_low_reso).sum() > 8e3:
+                default_low_reso += 0.5
+            nemo_info_I = NemoHandler(default_low_reso)
             try:
                 nemo_info_I.refl_data_prepare(ice_info._reflection_data, 'I')
-                nemo_info_I.get_nemo_row_ind()
+                nemo_info_I.cluster_detect()
             except ValueError:
                 nemo_info_I = None
             #nemo_info_I.cluster_detect(0)

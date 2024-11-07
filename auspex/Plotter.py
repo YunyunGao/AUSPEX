@@ -207,7 +207,6 @@ class GenericPlot(object):
                     alpha=0.5*scores,
                     linewidth=0)
                 ax1.add_patch(rectangle)
-
         if have_ice_rings_been_flagged:
             if os.path.exists("mtz_with_ice_ring.txt"):
                 os.remove("mtz_with_ice_ring.txt")
