@@ -133,13 +133,13 @@ def report_ice_ring(ice_ring_score, d_max, helcaraxe=True):
 def report_NEMO(nemo_instance: auspex.NEMO.NemoHandler):
     print("_______________________________________________________________________________\n")
     print("{:^79}\n".format("Not-excluded Beamstop unMask Outliers (NEMOs)"))
-    print("Following Reflections are considered to be NEMOs")
-    nemo_dict = {"indices": nemo_instance.get_nemo_indices(),
-                 "reosolution (Ang)": nemo_instance.get_nemo_D2()}
-
+    print("{:^79}\n".format("Following Reflections are considered to be NEMOs"))
+    nemo_dict = {"indices": [''.join(map(str, row)) for row in nemo_instance.get_nemo_indices()],
+                 "reosolution (Ang)": ['{:.2f}'.format(row) for row in 1/np.sqrt(nemo_instance.get_nemo_D2())],
+                 nemo_instance.get_data_type(): ['{:.3f}'.format(row) for row in nemo_instance.get_nemo_data_over_sig()]}
+    
     table = tabulate(nemo_dict,
                      headers="keys",
                      tablefmt="github",
                      disable_numparse=True)
-
     print(table)

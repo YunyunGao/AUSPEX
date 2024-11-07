@@ -227,21 +227,20 @@ class NemoHandler(object):
             else:
                 # initiation
                 in_token = np.empty(0, dtype=int)
-                in_prob = np.empty(0, dtype=float)
-                for c_label in unique_cluster_label:
-                    args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.49)).flatten()
-                    if args_.size == 0:
-                        continue
-                    ind_sub_cluster = self._sorted_arg[:self._reso_select][args_]
-                    wilson_filter = np.isin(ind_sub_cluster, ind_weak_work)
-
-                    s_ij = (wilson_filter.sum() / wilson_filter.size) > self._l_i
-                    if ((self._work_obs.is_xray_amplitude_array() and s_ij > self._l) or
-                            (self._work_obs.is_xray_intensity_array() and s_ij > self._l_i)):
+                is_amplitude = self._work_obs.is_xray_amplitude_array()
+                is_intensity = self._work_obs.is_xray_intensity_array()
+                #in_prob = np.empty(0, dtype=float)
+                with ProcessPoolExecutor(max_workers=os.cpu_count()) as excutor:
+                    future_to_token = {excutor.submit(self._robust_assignment,
+                                                      c_label, cluster_labels, cluster_prob, ind_weak_work,
+                                                      self._sorted_arg, self._reso_select, self._l, self._l_i,
+                                                      is_amplitude, is_intensity):
+                                       c_label for c_label in unique_cluster_label}
+                    for future in as_completed(future_to_token):
+                        ind_sub_cluster = future.result()
                         in_token = np.append(in_token, ind_sub_cluster)
-                        in_prob = np.append(in_prob, cluster_prob[args_])
 
-                ind_cluster_by_size.append(np.unique(in_token))
+                ind_cluster_by_size.append(np.unique(in_token.astype(int)))
 
         if not ind_cluster_by_size:
             # when no cluster can be found we need to be very conservative thus level -> 0.001
@@ -278,24 +277,30 @@ class NemoHandler(object):
 
         self._final_nemo_ind = final_weak_ind
 
-    def _robust_assignment(self, c_label, cluster_labels, cluster_prob, ind_weak_work):
+    @staticmethod
+    def _robust_assignment(c_label, cluster_labels, cluster_prob, ind_weak_work, sorted_arg, reso_select, l, l_i, is_amplitude, is_intensity):
         #in_token = np.empty(0, dtype=int)
         #in_prob = np.empty(0, dtype=float)
         args_ = np.argwhere((cluster_labels == c_label) & (cluster_prob >= 0.49)).flatten()
         if args_.size == 0:
             return []
-        ind_sub_cluster = self._sorted_arg[:self._reso_select][args_]
+        ind_sub_cluster = sorted_arg[:reso_select][args_]
         wilson_filter = np.isin(ind_sub_cluster, ind_weak_work)
 
-        s_ij = (wilson_filter.sum() / wilson_filter.size) > self._l_i
-        if ((self._work_obs.is_xray_amplitude_array() and s_ij > self._l) or
-                (self._work_obs.is_xray_intensity_array() and s_ij > self._l_i)):
+        s_ij = (wilson_filter.sum() / wilson_filter.size) > l_i
+        if ((is_amplitude and s_ij > l) or
+                (is_intensity and s_ij > l_i)):
             return ind_sub_cluster
         else:
             return []
             #in_token = np.append(in_token, ind_sub_cluster)
             #in_prob = np.append(in_prob, cluster_prob[args_])
 
+    def get_data_type(self):
+        if self._work_obs.is_xray_intensity_array():
+            return "I/sigI"
+        else:
+            return "F/sigF"
 
     def get_nemo_indices(self) -> np.ndarray[np.int16]:
         """Return the row indices of NEMOs identified in the corresponding reflection data.

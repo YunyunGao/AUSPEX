@@ -10,7 +10,7 @@ from IceRings import IceRing
 from NEMO import NemoHandler
 from ReflectionData.AutoReader import FileReader
 from ReflectionData.PlainASCII import IntegrateHKLPlain
-from Verbose import MergeStatistics, suppress_warnings, auspex_init, report_ice_ring
+from Verbose import MergeStatistics, suppress_warnings, auspex_init, report_ice_ring, report_NEMO
 
 suppress_warnings()
 
@@ -246,6 +246,7 @@ if exists(filename):
             try:
                 nemo_info_F.refl_data_prepare(ice_info._reflection_data, 'FP')
                 nemo_info_F.cluster_detect()
+                report_NEMO(nemo_info_F)
             except ValueError:
                 nemo_info_F = None
             #nemo_info_F.cluster_detect(0)
@@ -259,6 +260,7 @@ if exists(filename):
             try:
                 nemo_info_I.refl_data_prepare(ice_info._reflection_data, 'I')
                 nemo_info_I.cluster_detect()
+                report_NEMO(nemo_info_I)
             except ValueError:
                 nemo_info_I = None
             #nemo_info_I.cluster_detect(0)
