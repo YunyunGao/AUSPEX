@@ -79,7 +79,6 @@ class GenericPlot(object):
     def get_ymax(self, y_data, multiplier):
         ymax = min(y_data.max(),
                    ((np.nansum(y_data)/y_data.size) + multiplier*np.nanstd(y_data)))
-        print(np.std(y_data))
         return ymax
 
     def generate(self, icefinder_handle, resolution, y_data):

@@ -10,18 +10,18 @@ from auspex import __version__
 class MergeStatistics(object):
     def __init__(self, merge_stats_binned, merge_stas_overall):
         resolution, num_data, i_mean, i_over_sigma, completeness, redundancy, r_pim, r_merge, r_meas, cc_half = merge_stats_binned.get_stats_as_list()
-        self.i_mean = np.char.mod('%.2f', i_mean)
-        self.i_over_sigma = np.char.mod('%.2f', i_over_sigma)
-        self.redundancy = np.char.mod('%.2f', redundancy)
-        self.completeness = np.char.mod('%.1f', completeness*100)
-        self.r_pim = np.char.mod('%.4f', r_pim)
-        self.r_merge = np.char.mod('%.4f', r_merge)
-        self.r_meas = np.char.mod('%.4f', r_meas)
-        self.cc_half = np.char.mod('%.4f', cc_half)
-        self.res_range = ['{:=5.2f} -{:=5.2f}'.format(_.max(), _.min()) for _ in resolution]
+        self.i_mean = np.char.mod('%.2f', i_mean[::-1])
+        self.i_over_sigma = np.char.mod('%.2f', i_over_sigma[::-1])
+        self.redundancy = np.char.mod('%.2f', redundancy[::-1])
+        self.completeness = np.char.mod('%.1f', completeness[::-1]*100)
+        self.r_pim = np.char.mod('%.4f', r_pim[::-1])
+        self.r_merge = np.char.mod('%.4f', r_merge[::-1])
+        self.r_meas = np.char.mod('%.4f', r_meas[::-1])
+        self.cc_half = np.char.mod('%.4f', cc_half[::-1])
+        self.res_range = ['{:=5.2f} -{:=5.2f}'.format(_.max(), _.min()) for _ in resolution[::-1]]
         # self.res_range[-1][0:5] = '  Inf'
-        self.res_mean = np.char.mod('%.2f', [_.mean() for _ in resolution])
-        self.num_data = np.char.mod('%d', num_data)
+        self.res_mean = np.char.mod('%.2f', [_.mean() for _ in resolution[::-1]])
+        self.num_data = np.char.mod('%d', num_data[::-1])
         self.merge_stats_overall = merge_stas_overall
         self.header = ["Resolution", "#Data", "%Complete", "Redundancy", "<I>", "<I/s>", "cc1/2", "Rmerge", "Rpim", "Rmeas"]
         #self.stats_dict = self.format_dict()
@@ -115,13 +115,13 @@ def report_ice_ring(ice_ring_score, d_max, helcaraxe=True):
         print("{:^79}\n".format("QUANTITATIVE ICE RING SCORE"))
         print("The severity of ice ring contamination at the corresponding resolution ranges.")
         print("from 0.0 (no ice ring) to 1.0 (significant ice ring or truncation)\n")
-        ice_ring_dict = {"reosolution (Ang)": ice_rings[:d_max_ind], "score": ice_ring_score.tolist()[0][:d_max_ind]}
+        ice_ring_dict = {"resolution (Ang)": ice_rings[:d_max_ind], "score": ice_ring_score.tolist()[0][:d_max_ind]}
     else:
         print("_______________________________________________________________________________\n")
         print("{:^79}\n".format("NORMALIZED ICE FINDER SCORE"))
         print("The severity of ice ring contamination at the corresponding resolution ranges.")
         print("The larger the number the more sever the contamination.\n")
-        ice_ring_dict = {"reosolution (Ang)": ice_rings[:d_max_ind], "score": np.char.mod('%.3f', ice_ring_score)[:d_max_ind]}
+        ice_ring_dict = {"resolution (Ang)": ice_rings[:d_max_ind], "score": np.char.mod('%.3f', ice_ring_score)[:d_max_ind]}
 
     table = tabulate(ice_ring_dict,
                      headers="keys",
@@ -135,7 +135,7 @@ def report_NEMO(nemo_instance: auspex.NEMO.NemoHandler):
     print("{:^79}\n".format("Not-excluded Beamstop unMask Outliers (NEMOs)"))
     print("{:^79}\n".format("Following Reflections are considered to be NEMOs"))
     nemo_dict = {"indices": [''.join(map(str, row)) for row in nemo_instance.get_nemo_indices()],
-                 "reosolution (Ang)": ['{:.2f}'.format(row) for row in 1/np.sqrt(nemo_instance.get_nemo_D2())],
+                 "resolution (Ang)": ['{:.2f}'.format(row) for row in 1/np.sqrt(nemo_instance.get_nemo_D2())],
                  nemo_instance.get_data_type(): ['{:.3f}'.format(row) for row in nemo_instance.get_nemo_data_over_sig()]}
     
     table = tabulate(nemo_dict,
