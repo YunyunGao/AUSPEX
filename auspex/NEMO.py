@@ -210,7 +210,8 @@ class NemoHandler(object):
                 continue
 
             detect = HDBSCAN(min_cluster_size=task,
-                             n_jobs=os.cpu_count())  #TODO: code performance comparison with hdbscan lib
+                             n_jobs=os.cpu_count(),
+                             cluster_selection_method="leaf")  #TODO: code performance comparison with hdbscan lib
                              #min_samples=ind_weak_work.size-num_points+1, # not needed because the noise bootstraping strategy
                              #max_cluster_size=ind_weak_work.size,  # not needed because the noise bootstraping strategy
                              #algorithm='brute') # the default works fine
