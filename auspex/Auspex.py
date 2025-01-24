@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from ReflectionData import Mtz, Dials, Cif, Xds
 
 from BinnedData import BinnedSummaries
