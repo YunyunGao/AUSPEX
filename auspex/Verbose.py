@@ -12,6 +12,11 @@ from auspex import __version__
 
 class MergeStatistics(object):
     def __init__(self, merge_stats_binned, merge_stas_overall):
+        """Reads the MergeStatisticsBinned and MergeStatisticsOverall objects and formats the statistics for printing.
+
+        :param merge_stats_binned: MergeStatisticsBinned object
+        :param merge_stas_overall: MergeStatisticsOverall object
+        """
         resolution, num_data, i_mean, i_over_sigma, completeness, redundancy, r_pim, r_merge, r_meas, cc_half = merge_stats_binned.get_stats_as_list()
         self.i_mean = np.char.mod('%.2f', i_mean[::-1])
         self.i_over_sigma = np.char.mod('%.2f', i_over_sigma[::-1])
@@ -30,6 +35,8 @@ class MergeStatistics(object):
         #self.stats_dict = self.format_dict()
 
     def format_dict_by_column(self):
+        """Formats the statistics in a dictionary format for printing using by column convention.
+        """
         stats_dict = dict()
         stats_dict["Resolution"] = self.res_range
         stats_dict["#Data"] = self.num_data
@@ -44,6 +51,8 @@ class MergeStatistics(object):
         return stats_dict
 
     def format_dict_by_row(self):
+        """Formats the statistics in a dictionary format for printing using by row convention.
+        """
         stats_list = []
         for i in range(len(self.res_range)):
             stats_list.append([self.res_range[i], self.num_data[i], self.completeness[i], self.redundancy[i],
@@ -52,6 +61,8 @@ class MergeStatistics(object):
         return stats_list
 
     def format_stats_overall(self):
+        """Formats the overall statistics for printing.
+        """
         stats_list = ['{:=5.2f} -{:=5.2f}'.format(self.merge_stats_overall.ires_binned[1],
                                                   self.merge_stats_overall.ires_binned[0]),
                       '{:d}'.format(self.merge_stats_overall.num_data_binned),
@@ -66,6 +77,7 @@ class MergeStatistics(object):
         return stats_list
 
     def print_stats_table(self):
+        """Prints the statistics table."""
         # table = tabulate(self.stats_dict, headers='keys', colalign=('right', 'right', 'center', 'center', 'right', 'right','right', 'right', 'right', 'right'), disable_numparse=True)
         stats_list_binned = self.format_dict_by_row()
         table = tabulate([self.header, *self.format_dict_by_row(), SEPARATING_LINE, self.format_stats_overall()], headers='firstrow',
