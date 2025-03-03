@@ -3,7 +3,7 @@
 AUSPEX is a diagnostic tool for graphical X-Ray data analysis, it enables users to 
 automatically detect 
 **ice-ring artefacts with HELCARAXE CNN network**, 
-**beamstop outliers with NEMOs culstering strategy**, 
+**beamstop outliers with NEMOs culstering strategy and semi-supervised learning**, 
 or visualize other problems in integrated X-ray diffraction data.
 
 ## Getting Started
