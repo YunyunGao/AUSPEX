@@ -10,7 +10,7 @@ or visualize other problems in integrated X-ray diffraction data.
 
 These instructions will get you a copy of the project up and running on your local machine.
 
-### Prerequisites
+### Prerequisites (without Docker)
 
 The easiest approach to install AUSPEX is through conda environment.
 
@@ -52,13 +52,26 @@ To read the detailed help message:
 auspex -h
 ```
 
-
 ### Tests
 
 ```
 auspex test/4puc.mtz
 auspex test/8g0s.mtz --beamstop_outlier
 auspex test/5usx.mtz --nemo-removal --generate-xds-filter test/5usx_INTEGRATE.HKL
+```
+
+### Use Docker Container
+
+To run Auspex with docker
+
+```
+docker build --tag auspex .
+```
+
+Test with:
+
+```
+docker run -v test:/app auspex /app/4puc.mtz
 ```
 
 ### Documentation
