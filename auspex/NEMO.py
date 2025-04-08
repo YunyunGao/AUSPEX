@@ -368,7 +368,9 @@ class NemoHandler(object):
         if return_idx is True:
             return self._original_row_ind
 
-    def get_nemo_row_ind(self):
+    def get_nemo_row_ind(self) -> np.ndarray[int]:
+        """Return the original row indices of NEMOs identified in the corresponding reflection data.
+        """
         if self._final_nemo_ind is None:
             self.cluster_detect(0)
         if self._original_row_ind is None:
@@ -428,7 +430,7 @@ class NemoHandler(object):
         with open('FILTER.HKL', 'w') as f:
             f.writelines(lines)
 
-def cumprob_c_amplitude(e):
+def cumprob_c_amplitude(e: float) -> float: 
     """Calculate the probability of normalised centric amplitude smaller than a value.
     Ref: READ Acta. Cryst. (1999). D55, 1759-1764
 
@@ -438,7 +440,7 @@ def cumprob_c_amplitude(e):
     return 1. - erfc(e / 1.4142)
 
 
-def cumprob_ac_amplitude(e):
+def cumprob_ac_amplitude(e: float) -> float:
     """Calculate the probability of normalised acentric amplitude smaller than a value.
     Ref: READ Acta. Cryst. (1999). D55, 1759-1764
 
@@ -448,7 +450,7 @@ def cumprob_ac_amplitude(e):
     return 1 - np.exp(-e*e)
 
 
-def cumprob_ac_intensity(e_square, sig):
+def cumprob_ac_intensity(e_square: float, sig: float) -> float: 
     """Calculate the probability of normalised acentric intensity smaller than a value with a given sigma.
     Ref: READ Acta. Cryst. (2016). D72, 375-387
 
@@ -494,7 +496,7 @@ def cumprob_ac_intensity(e_square, sig):
 
 
 @np.vectorize
-def cumprob_c_intensity(e_square, sig):
+def cumprob_c_intensity(e_square: float, sig: float) -> float:
     """Calculate the probability of normalised acentric intensity smaller than a value with a given sigma.
     Ref: READ Acta. Cryst. (2016). D72, 375-387
 
